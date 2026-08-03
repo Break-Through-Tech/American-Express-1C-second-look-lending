@@ -41,7 +41,7 @@ The focus on the 'Inclusive Profit Score' is an excellent, sophisticated framing
 # Second-Look Lending
 
 **Company / Org:** American Express  
-**Challenge Advisor:** SAURABH GUPTA, saurabh.gupta13@aexp.com  
+**Challenge Advisor:** Thangavel Subramaniam, [Email address]   
 **Program:** Break Through Tech AI Studio - Fall 2026  
 
 ---
