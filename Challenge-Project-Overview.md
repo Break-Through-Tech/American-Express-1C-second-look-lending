@@ -47,35 +47,41 @@ The focus on the 'Inclusive Profit Score' is an excellent, sophisticated framing
 ---
 
 ## 🏢 About American Express
-American Express is a globally integrated payments company that provides customers with access to products, insights, and experiences that enrich lives and build business success. This project team will work with the lending division to refine credit risk assessment models, aiming to balance corporate profitability with the mission of expanding financial inclusion for underserved communities.
+American Express is a globally integrated payments company that provides customers with access to products, insights, and experiences that enrich lives and build business success. 
 
 ---
 
 ## 🎯 The Challenge
 ### Project Summary
-The team will leverage synthetic consumer-loan data to build and evaluate predictive models, including logistic regression, random forests, and gradient boosting, to identify default risks. By optimizing for an 'Inclusive Profit Score,' the project seeks to move beyond traditional risk-averse lending to create business-critical strategies that responsibly approve applicants with limited credit histories.
+In this project, you will use synthetic consumer-loan data and classical ML logistic regression, random forests, and gradient boosting to predict each applicant's default risk and convert it into a profit-aware, fair lending decision that better serves applicants with little credit history. This will help the company address making credit decisions that maximize profit while extending fair access to underserved borrowers.
 
 ### Success Criteria
-Model quality is measured with ROC-AUC and LogLoss, plus a calibration check (reliability curve and Brier score), and must beat a logistic-regression baseline. Decision quality is measured by expected portfolio profit under a defined cost model (held below a maximum default-rate ceiling) and by the thin-file inclusion gap. The headline metric is the Inclusive Profit Score = expected profit − penalty × inclusion gap.
+Evaluation has two levels, both computed on a time-based, held-out test set used only once. 
+
+- Model quality is measured with ROC-AUC and LogLoss, plus a calibration check (reliability curve and Brier score), and must beat a logistic-regression baseline.
+
+- Decision quality - the project’s original contribution — is measured by expected portfolio profit under a defined cost model (held below a maximum default-rate ceiling) and by the thin-file inclusion gap (the difference in approval rate, among applicants who would actually repay, between established and thin-file borrowers). These combine into the team’s headline metric, the Inclusive Profit Score = expected profit − penalty × inclusion gap, compared against a naïve single-threshold policy.
+
+### Stretch Goals
+Implementing Transformer based architecture (Mainly Self Attention) to find the feature combinations that drive clicks, automatically and to high order.
 
 ### Project Milestones
 Use these milestones to guide your work. Your team will create a GitHub Projects board to track tasks within each milestone.
 | Month | Milestone | Key Activities |
 |-------|-----------|----------------|
-| **September** | Data Exploration & Preprocessing | Conduct EDA, handle data cleaning for numerical/categorical variables, and establish outlier detection frameworks. |
-| **October** | Feature Engineering & Baseline Modeling | Engineer predictive features, build baseline models, and perform model training with grid and Bayesian hyperparameter tuning. |
-| **November** | Model Optimization & Evaluation | Finalize model selection, conduct rigorous scoring validation, and perform final deployment and Streamlit app development. |
-| **December** | Insights, Deliverables & Presentation | Consolidate business recommendations, optimize final assets, and package the solution for end-to-end presentation. |
+| **September** | Business Problem + Data Understanding , EDA , Feature Engineering |
+| **October** | Training and Validation Data Preparation, ML Algorithms Explorations, Candidate Models Identification, Model building , Hyper-parameter Fine tuning using Grid Search and Baysian Search |
+| **November** | Model Finalization, Model Scoring and Final Deployment, A very basic  frontend app creation using streamlit to show case model capability |
 
 > **Note for the team:** Please create a GitHub Projects board in this repository to break these milestones into weekly tasks. Go to the **Projects** tab → **New project** → Choose **Board** → Add columns for each month.
 
 ---
 
 ## 📊 Dataset
-**Name and Source:** American Express Synthetic Loan Dataset (Internal Secure Repository)  
+**Name and Source:** Second Look Dataset
 **Format:** CSV/TSV  
 **Size:** 1gb to 5gb  
-**Location:** Provided via secure cloud bucket access upon project start.  
+**Location:** https://drive.google.com/drive/folders/1bJpa87n6HCwRR3Pvr5xqocNZrGo7dufT
 
 ### Key Details
 - synthetic consumer-loan data, numerical/quantitative, categorical, time series, CSV/TSV format, requires cleaning/preprocessing
@@ -84,46 +90,62 @@ Use these milestones to guide your work. Your team will create a GitHub Projects
 ---
 
 ## 🛠️ Suggested Approach
-**ML Problem Type:** Classification  
-**Recommended Libraries:**
-- logistic regression
-- random forests
-- gradient boosting
-- streamlit
-**Evaluation Metrics:** ROC-AUC, LogLoss, Brier Score, and Inclusive Profit Score (Profit vs. Inclusion Gap).
 
+**ML Problem Type:**  Classification, Clustering, Recommendation Systems, Deep Learning / Neural Networks  
+
+**Recommended Libraries:**
+- [e.g., pandas, scikit-learn, TensorFlow, Hugging Face]
+
+**Evaluation Metrics:**
+- [e.g., Accuracy, Precision/Recall, RMSE, BLEU score]
+  
 ---
 
 ## 📚 Resources to Get Started
+
 The following resources will help your team understand the problem space and potential technical approaches for this project:
+
 **Background Reading:**
-- Industry standards on Fair Lending and Credit Risk Modeling.
+- [e.g., Link to an article or blog post about the problem domain]
+- [e.g., Link to an industry report or case study]
+
 **Technical Tutorials:**
-- Scikit-learn documentation for Gradient Boosting and Hyperparameter Tuning.
+- [e.g., Link to a free tutorial on the ML technique(s) involved]
+- [e.g., Link to documentation for a key library or tool]
+
 **Code Examples:**
-- Reference implementations for building interactive dashboards with Streamlit.
+- [e.g., Link to a relevant GitHub repo]
+- [e.g., Link to a sample implementation or starter code]
+
+**Other:**
+- [Links to any additional resources — e.g., papers, videos, podcasts, etc.]
+
+*Feel free to explore beyond these, and share anything interesting you find with me!*
 
 ---
 
 ## 🤝 How We'll Work Together
-**Check-ins:** During our biweekly 60-min AI Studio Lab Section meeting block (2nd and 4th week of every month)  
-**Communication:** Slack and project-specific email threads.  
-**Response time:** 48 hours for non-urgent inquiries.  
-**Recommended Tools:**
-- **Coding:** Google Colab Free Tier  
-- **Collaboration:** GitHub, Notion  
-- **Virtual Meetings:** Zoom, Google Meet  
+
+**Official check-ins:** During our biweekly 45-minute AI Studio Lab Section meeting block (2nd and 4th week of every month)
+
+ **Other ways to reach out to me with questions:** 
+* [e.g., Your team's channel within Break Through Tech’s Discord space]
+* [e.g., Email; please copy your teammates and AI Studio Coach]
+* [e.g., Request a team check-in on Zoom]
+* [Note: I will aim to respond within 48 hours. Please reach out to your AI Studio Coach with urgent questions.]
+
+> 💡 **Challenge Advisor: Please update the above based on your availability and preference. If you are not able to answer questions or meet with fellows outside of the biweekly Lab Section check-ins, simply write in "N/A (only available during the official check-in times)"**
+
+**Recommended free coding / collaboration tools**
+* […]
+* […]
 
 ---
 
 ## 🚀 Getting Started
-1. **Review this overview document** and note any questions for our first meeting.
-2. **Begin reviewing the dataset** using the link provided in the Dataset section.
-3. **Read the GitHub Projects documentation** [here](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects).
 
-I'm excited to work with you!
+1. **Review this overview document** and note any questions for our first meeting
+2. **Begin reviewing the dataset** using the link above
+3. **Read the GitHub Projects documentation** [here](https://docs.github.com/en/issues/planning-and-tracking-with-projects/learning-about-projects/about-projects)
 
----
-
-## ❓ Questions?
-Please bring any questions to our first meeting during the week of August 24th (Break Through Tech's Bridge to Studio - Session B).
+I’m excited to work with you!
