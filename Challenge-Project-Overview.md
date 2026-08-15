@@ -42,6 +42,7 @@ The focus on the 'Inclusive Profit Score' is an excellent, sophisticated framing
 
 **Company / Org:** American Express  
 **Challenge Advisor:** Thangavel Subramaniam, [Email address]   
+**AI Studio Coach:** Swagath Babu, swagath.babu@breakthroughtech.org    
 **Program:** Break Through Tech AI Studio - Fall 2026  
 
 ---
