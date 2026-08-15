@@ -122,6 +122,7 @@ The following resources will help your team understand the problem space and pot
 * [Scikit-Learn Tabular Classification Examples](https://github.com/scikit-learn/scikit-learn)
 **Other:**
 * [Credit Risk Modeling in Python Overview](https://scikit-learn.org/stable/)
+
 *Feel free to explore beyond these, and share anything interesting you find with me!*
 
 ---
@@ -133,7 +134,7 @@ The following resources will help your team understand the problem space and pot
  **Other ways to reach out to me with questions:** 
 * [e.g., Your team's channel within Break Through Tech’s Discord space]
 * velu.g2@gmail.com
-* Weekends days
+* 2-3 days
 * [Note: I will aim to respond within 48 hours. Please reach out to your AI Studio Coach with urgent questions.]
 
 > 💡 **Challenge Advisor: Please update the above based on your availability and preference. If you are not able to answer questions or meet with fellows outside of the biweekly Lab Section check-ins, simply write in "N/A (only available during the official check-in times)"**
