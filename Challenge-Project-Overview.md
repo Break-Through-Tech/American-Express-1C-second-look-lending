@@ -139,9 +139,8 @@ The following resources will help your team understand the problem space and pot
 > 💡 **Challenge Advisor: Please update the above based on your availability and preference. If you are not able to answer questions or meet with fellows outside of the biweekly Lab Section check-ins, simply write in "N/A (only available during the official check-in times)"**
 
 **Recommended free coding / collaboration tools**
-* […]
-* […]
-
+* Google Colab 
+* VS Code 
 ---
 
 ## 🚀 Getting Started
