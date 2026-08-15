@@ -99,7 +99,7 @@ Use these milestones to guide your work. Your team will create a GitHub Projects
 * `scikit-learn` (Baseline models, calibration, evaluation metrics)
 * `xgboost`, `lightgbm`, `catboost` (Gradient boosted decision trees)
 * `streamlit` (Frontend application dashboard)
-* `optuna` (Hyperparameter tuning)]
+* `scikit-learn` (`GridSearchCV` / `RandomizedSearchCV` for hyperparameter tuning)
 
 **Evaluation Metrics:**
 * Model Quality: ROC-AUC, LogLoss, Calibration Check (Reliability Curve & Brier Score)
