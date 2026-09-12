@@ -13,8 +13,9 @@
 | Dhyani Soni         | @dhy-ani           | Data exploration, visualization, overall project coordination            |
 | Sama Daham          | @sama-daham        | Data collection, exploratory data analysis (EDA), dataset documentation  |
 | Jaahnvi Toolsidas   | @jtoolsidas        | Data preprocessing, feature engineering, data validation                 |
-| Skylar Roberts      | @pka250-tech       | Model selection, hyperparameter tuning, model training and optimization  |
+| Krish Almeida      | @ka250-tech       | Model selection, hyperparameter tuning, model training and optimization  |
 | Aninda Saprotiv Roy | @AnindaSaprotivRoy | Model evaluation, performance analysis, results interpretation           |
+| Skylar Roberts        | @           | Data exploration, visualization, overall project coordination            |
 
 ---
 
