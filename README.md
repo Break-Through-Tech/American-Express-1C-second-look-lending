@@ -8,13 +8,14 @@
 
 **Example:**
 
-| Name             | GitHub Handle | Contribution                                                             |
-|------------------|---------------|--------------------------------------------------------------------------|
-| Taylor Nguyen    | @taylornguyen | Data exploration, visualization, overall project coordination            |
-| Jordan Ramirez   | @jramirez     | Data collection, exploratory data analysis (EDA), dataset documentation  |
-| Amina Hassan     | @aminahassan  | Data preprocessing, feature engineering, data validation                 |
-| Priya Mehta      | @pmehta       | Model selection, hyperparameter tuning, model training and optimization  |
-| Chris Park       | @chrispark    | Model evaluation, performance analysis, results interpretation           |
+| Name                | GitHub Handle      | Contribution                                                             |
+|---------------------|--------------------|--------------------------------------------------------------------------|
+| Skylar Roberts      | @skylar-ej-roberts | Data exploration, visualization, overall project coordination            |
+| Dhyani Soni         | @dhy-ani           | Data exploration, visualization, overall project coordination            |
+| Sama Daham          | @sama-daham        | Data collection, exploratory data analysis (EDA), dataset documentation  |
+| Jaahnvi Toolsidas   | @jtoolsidas        | Data preprocessing, feature engineering, data validation                 |
+| Krish Almeida      | @ka250-tech         | Model selection, hyperparameter tuning, model training and optimization  |
+| Aninda Saprotiv Roy | @AnindaSaprotivRoy | Model evaluation, performance analysis, results interpretation           |
 
 ---
 
