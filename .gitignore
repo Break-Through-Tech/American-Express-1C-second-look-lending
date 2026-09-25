@@ -1,1 +1,19 @@
+# Data: 1-5 GB, lives on Google Drive — never commit it
+data/raw/
+data/interim/
+data/processed/
+*.csv
+*.parquet
+*.zip
 
+# Python / environments
+.venv/
+venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
