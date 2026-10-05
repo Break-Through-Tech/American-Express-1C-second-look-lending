@@ -10,7 +10,7 @@ Break Through Tech AI Studio · American Express · Fall 2026
 |---------------------|--------------------|---------------------------------------------------------------------------|
 | Skylar Roberts      | @skylar-ej-roberts | Base table EDA, missing values & outliers (#3)                            |
 | Dhyani Soni         | @dhy-ani           | Feature engineering (#6), data pipeline integration                       |
-| Sama Daham          | @sama-daham        | Categorical encoding & numeric scaling (#4)                               |
+| Sama Daham          | @sama-daham        | Categorical encoding & numeric scaling (#4), data processing for model building       |
 | Jaahnvi Toolsidas   | @jtoolsidas        | Business understanding (#2), technical report                             |
 | Krish Almeida       | @ka250-tech        | EDA & predictive signals (#7), model selection and tuning                 |
 | Aninda Saprotiv Roy | @AnindaSaprotivRoy | EDA & predictive signals (#7), model evaluation and fairness analysis     |
