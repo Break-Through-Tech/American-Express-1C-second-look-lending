@@ -1,0 +1,9 @@
+table,depth,grain_rows_per_case,join_key,files_train,files_test,n_rows_train,n_rows_test,n_cols,description
+base,0,1,case_id,train_base.csv,test_base.csv,1000000,200000,5,"Loan spine: one row per application, with the binary default target."
+static_0,0,1,case_id,"train_static_0_0.csv, train_static_0_1.csv","test_static_0_0.csv, test_static_0_1.csv",1000000,200000,8,Applicant static attributes known at decision time.
+static_cb_0,0,0 or 1,case_id,train_static_cb_0.csv,test_static_cb_0.csv,700179,139971,4,Credit-bureau static summary; present only for applicants WITH bureau history.
+person_1,1,1..2,case_id,train_person_1.csv,test_person_1.csv,1500222,300192,6,Person/demographic records (depth 1).
+credit_bureau_a_1,1,0..8,case_id,"train_credit_bureau_a_1_0.csv, train_credit_bureau_a_1_1.csv","test_credit_bureau_a_1_0.csv, test_credit_bureau_a_1_1.csv",3155263,628736,6,Credit-bureau contracts. EMPTY for thin-file applicants -> the inclusion signal.
+credit_bureau_a_2,2,0..n,case_id,train_credit_bureau_a_2.csv,test_credit_bureau_a_2.csv,4729114,945046,5,Sub-records (e.g. monthly payments) of each credit-bureau contract (depth 2).
+applprev_1,1,0..4,case_id,train_applprev_1.csv,test_applprev_1.csv,1997547,401046,5,Applicant's previous applications (depth 1).
+tax_registry_a_1,1,0..3,case_id,train_tax_registry_a_1.csv,test_tax_registry_a_1.csv,1499786,299117,4,Declared tax / income records (depth 1).

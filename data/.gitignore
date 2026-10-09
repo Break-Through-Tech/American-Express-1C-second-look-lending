@@ -1,0 +1,4 @@
+# Raw dataset is committed; solution.csv (hidden test labels) is not.
+!raw/
+!raw/**
+raw/solution.csv

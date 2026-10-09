@@ -1,0 +1,2 @@
+# Keep data files byte-for-byte identical on every OS (no line-ending conversion)
+raw/** -text
