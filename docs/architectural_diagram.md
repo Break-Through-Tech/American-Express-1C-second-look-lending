@@ -13,8 +13,8 @@ flowchart LR
         F --> R["Evaluate results"]
         R --> Q{"Results good enough?"}
         Q -->|"No: apply edits and feedback"| F
-        Q -->|"Yes"| G["Model selection"]
-        G --> H["Hyperparameter tuning"]
+        Q -->|"Yes"| G["Model selection<br/>Choose the model that best fits our needs"]
+        G --> H["Hypertune selected model"]
     end
 
     D -->|"model-ready data"| E
