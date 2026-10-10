@@ -4,3 +4,5 @@ pyarrow
 scikit-learn>=1.4
 matplotlib
 jupyter
+papermill
+ipykernal
