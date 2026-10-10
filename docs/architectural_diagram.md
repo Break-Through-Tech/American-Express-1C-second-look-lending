@@ -1,7 +1,7 @@
 # Project Roadmap
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph PREP["Data Preparation"]
         A["EDA"] --> B["Handle missing values and outliers"]
         B --> C["Feature engineering"]
@@ -17,5 +17,5 @@ flowchart TD
         G --> H["Hyperparameter tuning"]
     end
 
-    D --> E
+    D -->|"model-ready data"| E
 ```
