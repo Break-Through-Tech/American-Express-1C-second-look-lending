@@ -1,0 +1,44 @@
+table,depth,column,role,in_test,dtype,suffix,suffix_meaning,pct_missing,description
+base,0,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+base,0,date_decision,meta,yes,object,,,0.0,Date the approval decision was made.
+base,0,MONTH,meta,yes,int32,,,0.0,Year-month of the decision (YYYYMM).
+base,0,WEEK_NUM,meta,yes,int16,,,0.0,Week index of the application; time axis for splits / stability.
+base,0,target,target,no,int8,,,0.0,"1 = the loan defaulted, 0 = repaid."
+static_0,0,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+static_0,0,mainoccupationinc_384A,feature,yes,float64,A,amount,4.97,Declared main-occupation income (amount).
+static_0,0,credamount_770A,feature,yes,float64,A,amount,2.0,Requested / contract credit amount (amount).
+static_0,0,annuity_780A,feature,yes,float64,A,amount,9.97,"Loan annuity, i.e. periodic payment (amount)."
+static_0,0,days_employed_700P,feature,yes,float64,P,days past due,15.06,Length of employment (days-past-due-style transform).
+static_0,0,education_927M,feature,yes,object,M,masked category,0.0,Education level (masked category; carries signal).
+static_0,0,maritalstatus_703M,feature,yes,object,M,masked category,0.0,Marital status (masked category).
+static_0,0,birth_259D,feature,yes,object,D,date,0.0,Applicant date of birth (date).
+static_cb_0,0,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+static_cb_0,0,riskassesment_940T,feature,yes,float64,T,transform,5.02,Bureau risk-assessment score (transform).
+static_cb_0,0,numberofqueries_146L,feature,yes,int16,L,transform,0.0,Recent credit-bureau queries (count transform).
+static_cb_0,0,description_5085714M,feature,yes,object,M,masked category,0.0,Bureau description code (masked category; carries signal).
+person_1,1,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+person_1,1,num_group1,index,yes,int64,,,0.0,Within-case row index for a depth-1 table.
+person_1,1,personindex_1023L,feature,yes,int64,L,transform,0.0,Person index within the case (transform).
+person_1,1,mainoccupationinc_384A,feature,yes,float64,A,amount,5.0,Declared main-occupation income (amount).
+person_1,1,empl_employedtotal_800L,feature,yes,float64,L,transform,19.98,Total employment length (transform).
+person_1,1,housingtype_772M,feature,yes,object,M,masked category,0.0,Housing type (masked category).
+credit_bureau_a_1,1,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+credit_bureau_a_1,1,num_group1,index,yes,int64,,,0.0,Within-case row index for a depth-1 table.
+credit_bureau_a_1,1,credamount_770A,feature,yes,float64,A,amount,0.0,Requested / contract credit amount (amount).
+credit_bureau_a_1,1,overdueamountmax_950A,feature,yes,float64,A,amount,29.98,Maximum overdue amount on the contract (amount).
+credit_bureau_a_1,1,pmts_dpdvalue_108P,feature,yes,float64,P,days past due,0.0,Days-past-due on payments (days-past-due).
+credit_bureau_a_1,1,classificationofcontr_13M,feature,yes,object,M,masked category,0.0,Contract classification (masked category; carries signal).
+credit_bureau_a_2,2,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+credit_bureau_a_2,2,num_group1,index,yes,int64,,,0.0,Within-case row index for a depth-1 table.
+credit_bureau_a_2,2,num_group2,index,yes,int64,,,0.0,Within-record sub-index for a depth-2 table.
+credit_bureau_a_2,2,pmts_month_158T,feature,yes,int16,T,transform,0.0,Payment month (transform).
+credit_bureau_a_2,2,pmts_overdue_1140A,feature,yes,float64,A,amount,40.01,Overdue payment amount on the sub-record (amount).
+applprev_1,1,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+applprev_1,1,num_group1,index,yes,int64,,,0.0,Within-case row index for a depth-1 table.
+applprev_1,1,credamount_590A,feature,yes,float64,A,amount,0.0,Credit amount of the previous application (amount).
+applprev_1,1,approvaldate_319D,feature,yes,object,D,date,10.0,Approval date of the previous application (date).
+applprev_1,1,status_219L,feature,yes,object,L,transform,0.0,Previous-application status (masked transform).
+tax_registry_a_1,1,case_id,key,yes,int64,,,0.0,Unique loan/application id; the join key for every table.
+tax_registry_a_1,1,num_group1,index,yes,int64,,,0.0,Within-case row index for a depth-1 table.
+tax_registry_a_1,1,amount_4527230A,feature,yes,float64,A,amount,0.0,Declared tax/income amount (amount).
+tax_registry_a_1,1,name_4527232M,feature,yes,object,M,masked category,0.0,Employer/name code (masked category).
