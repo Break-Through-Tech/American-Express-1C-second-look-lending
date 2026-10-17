@@ -5,4 +5,6 @@ scikit-learn>=1.4
 matplotlib
 jupyter
 papermill
-ipykernal
+ipykernel
+lightgbm>=4.0
+xgboost>=2.0
