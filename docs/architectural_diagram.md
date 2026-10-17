@@ -3,18 +3,18 @@
 ```mermaid
 flowchart LR
     subgraph PREP["Data Preparation"]
-        A["EDA"] --> B["Handle missing values and outliers"]
-        B --> C["Feature engineering"]
-        C --> D["Encoding and scaling"]
+        A["EDA"] --> B["Handle missing<br/>values and outliers"]
+        B --> C["Feature<br/>engineering"]
+        C --> D["Encoding<br/>and scaling"]
     end
 
     subgraph MODEL["Model Development"]
-        E["Model exploration"] --> F["Model building"]
-        F --> R["Evaluate results"]
-        R --> Q{"Results good enough?"}
-        Q -->|"No: apply edits and feedback"| F
-        Q -->|"Yes"| G["Model selection<br/>Choose the model that best fits our needs"]
-        G --> H["Hypertune selected model"]
+        E["Model<br/>exploration"] --> F["Model<br/>building"]
+        F --> R["Evaluate<br/>results"]
+        R --> Q{"Results<br/>good enough?"}
+        Q -->|"No: apply edits<br/>and feedback"| F
+        Q -->|"Yes"| G["Model selection<br/>Choose the model<br/>that best fits<br/>our needs"]
+        G --> H["Hypertune<br/>selected model"]
     end
 
     D -->|"model-ready data"| E
