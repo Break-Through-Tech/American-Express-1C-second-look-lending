@@ -1,0 +1,57 @@
+{
+  "split": {
+    "train_weeks": "0-67",
+    "tune_weeks": "68-79",
+    "valid_weeks": "80-91",
+    "final_fit_weeks": "0-79"
+  },
+  "selection": "lowest tune LogLoss; ties within 0.0003 broken by simplest model",
+  "lightgbm": {
+    "params": {
+      "objective": "binary",
+      "learning_rate": 0.05,
+      "bagging_freq": 1,
+      "verbose": -1,
+      "num_threads": 8,
+      "seed": 42,
+      "feature_pre_filter": false,
+      "num_leaves": 15,
+      "min_child_samples": 2013,
+      "feature_fraction": 0.73,
+      "bagging_fraction": 0.68,
+      "lambda_l2": 0.67
+    },
+    "trees": 280
+  },
+  "xgboost": {
+    "params": {
+      "tree_method": "hist",
+      "enable_categorical": true,
+      "max_cat_to_onehot": 16,
+      "learning_rate": 0.05,
+      "eval_metric": "logloss",
+      "n_jobs": 8,
+      "random_state": 42,
+      "min_child_weight": 13.18,
+      "subsample": 0.8,
+      "colsample_bytree": 0.97,
+      "reg_lambda": 3.492,
+      "max_depth": 3
+    },
+    "trees": 562
+  },
+  "ensemble": {
+    "method": "soft voting, 50/50 average of LightGBM and XGBoost probabilities",
+    "recommended": false
+  },
+  "recency_half_life_weeks": "13",
+  "recency_trees": 136,
+  "excluded_from_features": [
+    "case_id",
+    "target",
+    "WEEK_NUM",
+    "thin_file",
+    "date_decision",
+    "birth_259D"
+  ]
+}
