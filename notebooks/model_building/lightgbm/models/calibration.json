@@ -1,0 +1,16 @@
+{
+  "method": "Platt scaling on the base model's log-odds, fitted separately per segment on weeks 68-79",
+  "formula": "p_calibrated = 1 / (1 + exp(-(a * log(p / (1 - p)) + b)))",
+  "base_model": "lightgbm_calibrated_base.txt",
+  "segments": {
+    "thin_file": {
+      "a": 1.0301524970652536,
+      "b": -0.30612111952362275
+    },
+    "established": {
+      "a": 1.0006704477786956,
+      "b": 0.011339786272849588
+    }
+  },
+  "cutoff": 0.2
+}
