@@ -1,0 +1,2 @@
+# Model files must stay byte-for-byte identical on every OS (no line-ending conversion)
+* -text
