@@ -1,1 +1,24 @@
 
+# Python
+__pycache__/
+*.pyc
+backend/.venv/
+
+# Generated features and trained models (rebuilt by the app)
+backend/artifacts/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# The dataset stays local and is never committed
+*.csv
+data/synth_home_credit
+
+# IDE / OS / local tool settings
+.idea/
+.DS_Store
+.claude/
+
+# Notebook runs (rebuilt by notebooks/second_look_lending.ipynb)
+backend/artifacts_notebook/

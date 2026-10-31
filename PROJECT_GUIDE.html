@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second-Look Lending Guide</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f5;
+    --surface: #ffffff;
+    --surface-2: #eef1f0;
+    --border: #d5dbd8;
+    --text: #13221d;
+    --text-2: #4b5a55;
+    --text-3: #77847f;
+    --accent: #0f7b5a;
+    --accent-soft: #e2f1eb;
+    --blue: #2a78d6;
+    --orange: #eb6834;
+    --good: #12823b;
+    --bad: #c62f2f;
+    --warn-soft: #fbf0dc;
+    --code-bg: #f0f2f1;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1513; --surface: #18201d; --surface-2: #212b27; --border: #34413b;
+      --text: #e9efed; --text-2: #b0bdb8; --text-3: #84918c; --accent: #3cc392; --accent-soft: #173229;
+      --blue: #3987e5; --orange: #d95926; --good: #4cc477; --bad: #ef6b6b; --warn-soft: #33270f; --code-bg: #111816;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1513; --surface: #18201d; --surface-2: #212b27; --border: #34413b;
+    --text: #e9efed; --text-2: #b0bdb8; --text-3: #84918c; --accent: #3cc392; --accent-soft: #173229;
+    --blue: #3987e5; --orange: #d95926; --good: #4cc477; --bad: #ef6b6b; --warn-soft: #33270f; --code-bg: #111816;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); max-width: 1240px; margin: 0 auto; }
+  nav.toc { position: sticky; top: 0; height: 100vh; overflow-y: auto; padding: 32px 16px 32px 20px; border-right: 1px solid var(--border); }
+  nav.toc .brand { font-weight: 700; margin-bottom: 4px; }
+  nav.toc .sub { font-size: 12px; color: var(--text-3); margin-bottom: 20px; }
+  nav.toc a { display: block; color: var(--text-2); text-decoration: none; padding: 4px 8px; border-radius: 6px; font-size: 14px; }
+  nav.toc a:hover { background: var(--surface-2); color: var(--text); }
+  main { padding: 40px 32px 96px; min-width: 0; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 16px; display: flex; flex-wrap: wrap; gap: 2px; }
+    nav.toc .brand, nav.toc .sub { width: 100%; }
+    main { padding: 24px 16px 64px; }
+  }
+
+  h1 { font-size: 34px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 24px; margin: 56px 0 12px; letter-spacing: -0.01em; scroll-margin-top: 16px; }
+  h3 { font-size: 17px; margin: 28px 0 8px; }
+  p { margin: 0 0 12px; color: var(--text-2); max-width: 780px; }
+  li { color: var(--text-2); margin-bottom: 4px; }
+  strong { color: var(--text); }
+  a { color: var(--accent); }
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .lead { font-size: 18px; color: var(--text-2); }
+
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.55; }
+  pre code { background: none; padding: 0; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin: 14px 0; }
+  .diagram { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 14px 0; overflow-x: auto; }
+  .diagram .mermaid { min-width: 560px; text-align: center; visibility: hidden; }
+  .diagram .mermaid[data-processed] { visibility: visible; }
+  .diagram .mermaid svg { max-width: 100%; height: auto; }
+  .caption { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center; margin-top: 10px; font-size: 13px; color: var(--text-2); }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 6px; vertical-align: -1px;
+    border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .label { font-size: 13px; color: var(--text-2); }
+  .stat .value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .hint { font-size: 12px; color: var(--text-3); }
+  @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-2); font-size: 13px; font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--accent-soft); font-weight: 600; }
+
+  .steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  .steps > li { counter-increment: step; position: relative; padding: 0 0 18px 44px; }
+  .steps > li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center;
+  }
+  .steps > li > strong { display: block; margin-bottom: 4px; }
+  .note { background: var(--warn-soft); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--text); margin: 12px 0; }
+  .tip { background: var(--accent-soft); border-radius: 10px; padding: 12px 14px; font-size: 14px; color: var(--text); margin: 12px 0; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+  .page-card h3 { margin-top: 0; }
+  .page-card .path { font-family: ui-monospace, Menlo, monospace; font-size: 12px; color: var(--text-3); }
+  dl.glossary { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px 24px; }
+  dl.glossary dt { font-weight: 600; }
+  dl.glossary dd { margin: 2px 0 0; color: var(--text-2); font-size: 14px; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="toc" aria-label="Contents">
+    <div class="brand">Second-Look Lending</div>
+    <div class="sub">Project guide</div>
+    <a href="#overview">1. What this project is</a>
+    <a href="#results">2. Results</a>
+    <a href="#architecture">3. Architecture</a>
+    <a href="#pipeline">4. ML pipeline</a>
+    <a href="#training">5. How training works</a>
+    <a href="#policy">6. The decision policy</a>
+    <a href="#setup">7. Setup guide</a>
+    <a href="#use">8. How to use the app</a>
+    <a href="#code">9. Code walkthrough</a>
+    <a href="#api">10. API reference</a>
+    <a href="#troubleshooting">11. Troubleshooting</a>
+    <a href="#glossary">12. Glossary</a>
+  </nav>
+
+  <main>
+    <div class="eyebrow">Break Through Tech AI · AI Studio Challenge 2026</div>
+    <h1>Second-Look Lending</h1>
+    <p class="lead">Predict each applicant's probability of default, turn it into an approve / deny decision that makes money,
+      and give applicants with little credit history a fair second look.</p>
+    <p>This guide is for anyone joining the project: what it does, how it is built, how to run it, how to use every page,
+      and where to start reading the code.</p>
+
+    <!-- 1 -->
+    <h2 id="overview">1. What this project is</h2>
+    <p>A lender has a cost model: a repaid loan earns <strong>+$2,000</strong>, a default loses <strong>−$8,000</strong>, a
+      denied applicant is $0. So approving only pays off when the probability of default (PD) is below
+      <strong>2,000 / (2,000 + 8,000) = 20%</strong>.</p>
+    <p>The catch is <strong>thin-file applicants</strong>: people with no credit-bureau history (30% of applicants). The
+      model knows less about them, and in this data their risk falls over time, so a model trained on older weeks
+      thinks they are riskier than they are. A flat 20% rule then turns away many who would have repaid. The project
+      measures that unfairness (the <strong>inclusion gap</strong>) and fixes it without losing profit.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="label">Train loans</div><div class="value">1,000,000</div><div class="hint">weeks 0–91</div></div>
+      <div class="stat"><div class="label">Test loans (later weeks)</div><div class="value">200,000</div><div class="hint">weeks 92–107</div></div>
+      <div class="stat"><div class="label">Default rate</div><div class="value">19.2%</div><div class="hint">imbalanced target</div></div>
+      <div class="stat"><div class="label">Thin-file applicants</div><div class="value">30%</div><div class="hint">no bureau contracts</div></div>
+    </div>
+    <p>The dataset is <strong>synthetic</strong> — it mimics a real credit bureau's tables but contains no real people.</p>
+
+    <!-- 2 -->
+    <h2 id="results">2. Results</h2>
+    <p>Out-of-time test set, scored once against the answer key. The model and every setting were chosen on validation
+      weeks only.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Model</th><th class="num">Test AUC</th><th class="num">LogLoss</th><th class="num">Baseline → second-look profit</th><th class="num">Inclusion gap</th></tr></thead>
+        <tbody>
+          <tr><td>Logistic Regression (baseline)</td><td class="num">0.7595</td><td class="num">0.3914</td><td class="num">$144.4M → $151.5M</td><td class="num">38.4 → −1.9 pts</td></tr>
+          <tr><td>Random Forest</td><td class="num">0.7613</td><td class="num">0.3898</td><td class="num">$141.0M → $152.7M</td><td class="num">47.9 → −1.8 pts</td></tr>
+          <tr><td>LightGBM</td><td class="num">0.7674</td><td class="num">0.3863</td><td class="num">$147.6M → $154.1M</td><td class="num">36.0 → −0.3 pts</td></tr>
+          <tr class="hl"><td>LightGBM + Optuna (chosen)</td><td class="num">0.7676</td><td class="num">0.3862</td><td class="num">$147.7M → $153.2M</td><td class="num">36.9 → −5.4 pts</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:12px">Every model earns <strong>more</strong> and becomes <strong>fairer</strong> with the second-look
+      policy. Of thin-file applicants who repaid, 80.6% are approved instead of 41.2%. Most of the gain comes from
+      calibration: thin-file PDs go from 25.9% (raw) to 18.0%, against a real default rate of 17.8%.</p>
+
+    <!-- 3 -->
+    <h2 id="architecture">3. Architecture</h2>
+    <h3>High-level flow of the application</h3>
+    <p>The journey through the app, from raw data to a decision. Each column is one step: the blue box is the page you
+      use, the box under it is what the backend does for you.</p>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    subgraph ST1["1 · Explore"]
+        direction TB
+        U1("Overview + Insights<br/>pages"):::ui --> S1("Read 8 CSV tables<br/>build 53 features"):::ml
+    end
+    subgraph ST2["2 · Train"]
+        direction TB
+        U2("Train page<br/>watch it live"):::ui --> S2("Fit LR · RF · LightGBM<br/>in a background job"):::ml
+    end
+    subgraph ST3["3 · Compare"]
+        direction TB
+        U3("Compare models<br/>page"):::ui --> S3("AUC · LogLoss per segment<br/>on validation weeks"):::ml
+    end
+    subgraph ST4["4 · Decide"]
+        direction TB
+        U4("Policy lab<br/>page"):::ui --> S4("Calibrate · drift fix<br/>segment thresholds"):::ml
+    end
+    subgraph ST5["5 · Use"]
+        direction TB
+        U5("Score applicant<br/>page"):::ui --> S5{"Approve or deny<br/>+ reasons"}:::decision
+    end
+    DATA[("Synthetic dataset<br/>1.2M loans")]:::data ==> ST1
+    ST1 ==> ST2 ==> ST3 ==> ST4 ==> ST5
+    ST5 ==> OUT(["More profit<br/>smaller inclusion gap"]):::good
+    </div></div>
+
+    <h3>System architecture</h3>
+    <p>One React app talks to one FastAPI server. Training runs on a background thread so the UI stays responsive and can
+      show progress live. The dataset is read-only; everything the app produces goes to <code>backend/artifacts/</code>.</p>
+    <div class="diagram"><div class="mermaid">
+flowchart TB
+    subgraph UI["React UI · frontend/src"]
+        direction LR
+        P1("Overview & EDA"):::ui
+        P2("Insights"):::ui
+        P3("Train models"):::ui
+        P4("Compare models"):::ui
+        P5("Policy lab"):::ui
+        P6("Score applicant"):::ui
+        P1 ~~~ P2 ~~~ P3 ~~~ P4 ~~~ P5 ~~~ P6
+    end
+    subgraph API["FastAPI · backend/app"]
+        MAIN("main.py · API routes"):::api
+        EDA("eda.py"):::api
+        INS("insights.py · algorithm.py"):::api
+        APPL("applicant.py"):::api
+        JOBS("jobs.py · background thread"):::api
+        TRAIN("training.py"):::ml
+        MODELS("models.py<br/>LR · RF · LightGBM"):::ml
+        ANALYSIS("analysis.py"):::ml
+        POLICY("policy.py<br/>calibration · thresholds"):::ml
+        FEAT("features.py"):::ml
+        STORE("storage.py"):::api
+        MAIN --> EDA & INS & APPL & JOBS
+        JOBS --> TRAIN
+        TRAIN --> MODELS & ANALYSIS & FEAT & STORE
+        ANALYSIS --> POLICY
+        EDA --> FEAT
+        APPL --> STORE
+    end
+    UI ==>|"REST / JSON · /api/..."| MAIN
+    FEAT -->|reads| DATA[("data/synth_home_credit<br/>8 CSV tables")]:::data
+    FEAT -->|caches| ART[("artifacts/features<br/>parquet")]:::store
+    STORE -->|saves| RUNS[("artifacts/runs<br/>models · predictions · policy")]:::store
+    </div></div>
+
+    <h3>What happens when you press "Start training"</h3>
+    <div class="diagram"><div class="mermaid">
+sequenceDiagram
+    autonumber
+    actor You
+    box rgba(42,120,214,0.14) Browser
+        participant UI as Train page
+    end
+    box rgba(15,123,90,0.14) Server
+        participant API as FastAPI
+        participant Job as Job thread
+        participant T as training.py
+    end
+    box rgba(138,145,142,0.16) Disk
+        participant Disk as artifacts/runs
+    end
+    You->>UI: pick model + settings, press Start
+    UI->>API: POST /api/train
+    API->>Job: start_job(settings)
+    API-->>UI: job_id (returns at once)
+    Job->>T: train(settings, live)
+    rect rgba(107,79,216,0.12)
+        loop every second
+            UI->>API: GET /api/jobs/{job_id}
+            API-->>UI: step · Optuna trials · learning curve · logs
+        end
+    end
+    T->>T: load features, split by week, tune, fit, score
+    T->>Disk: model.joblib · predictions · info.json
+    T->>T: calibrate + pick thresholds
+    T->>Disk: policy.json · calibrator.joblib
+    Job-->>UI: done · run_id
+    </div></div>
+
+    <!-- 4 -->
+    <h2 id="pipeline">4. ML pipeline</h2>
+    <p>From eight raw tables to an approve / deny decision. The model never sees the raw tables; it sees one row of 53
+      features per loan.</p>
+    <div class="diagram"><div class="mermaid">
+flowchart TB
+    subgraph RAW["8 raw tables · joined by case_id"]
+        direction LR
+        subgraph D0["Depth 0 · one row per loan"]
+            direction TB
+            A1[("base")]:::data
+            A2[("static_0")]:::data
+            A3[("static_cb_0")]:::bureau
+        end
+        subgraph D1["Depth 1–2 · many rows per loan"]
+            direction TB
+            B1[("person_1")]:::data
+            B2[("credit_bureau_a_1")]:::bureau
+            B3[("credit_bureau_a_2")]:::bureau
+            B4[("applprev_1")]:::data
+            B5[("tax_registry_a_1")]:::data
+        end
+    end
+    subgraph FLOW["From features to a decision"]
+        direction LR
+        F("Feature table<br/>1 row per loan · 53 features"):::ml
+        S("Split by week"):::ml
+        M("Train PD model<br/>LR · RF · LightGBM"):::ml
+        C("Calibrate per segment<br/>+ drift correction"):::ml
+        T("Per-segment<br/>thresholds"):::decision
+        DEC{"Approve<br/>or deny"}:::decision
+        F --> S --> M --> C --> T --> DEC
+    end
+    D0 -->|join| F
+    D1 -->|"aggregate: count · mean · max · sum"| F
+    </div></div>
+    <p><strong>Thin-file flag:</strong> an applicant with zero rows in <code>credit_bureau_a_1</code>. Those people also miss
+      <code>static_cb_0</code> and <code>credit_bureau_a_2</code>, so every bureau feature is empty for them.</p>
+
+    <h3>The time split</h3>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    W1("Weeks 0–79<br/><b>fit the model</b><br/>869,559 loans"):::api
+    W2("Weeks 80–85<br/><b>early stopping + Optuna</b><br/>64,824 loans"):::data
+    W3("Weeks 86–91<br/><b>calibrate + thresholds</b><br/>65,617 loans · unseen by the model"):::ml
+    W4("Weeks 92–107 · test<br/><b>scored once</b><br/>200,000 loans"):::decision
+    W1 ==> W2 ==> W3 ==> W4
+    </div></div>
+    <p>Lending always predicts the future from the past, so we split by week, never at random. Each window has one job,
+      so nothing is judged on data it was tuned on.</p>
+
+    <!-- 5 -->
+    <h2 id="training">5. How training works</h2>
+    <p>Three algorithms, from simplest to strongest. Each one outputs a PD between 0 and 1.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Model</th><th>Idea in one line</th><th>"Epochs"?</th></tr></thead>
+        <tbody>
+          <tr><td>Logistic Regression</td><td>One weight per feature, add them up, squash into a probability.</td><td><code>max_iter</code>: each solver iteration is one pass over all loans (stopped after 67).</td></tr>
+          <tr><td>Random Forest</td><td>Hundreds of independent decision trees on random samples, averaged.</td><td>None — every tree is built once.</td></tr>
+          <tr><td>LightGBM</td><td>Trees built one after another, each fixing the mistakes left by the previous ones.</td><td>Boosting rounds: one tree per round, stopped early by validation AUC.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>The LightGBM training loop</h3>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    S(["Start: every loan gets<br/>the average default rate"]):::good
+    E("Measure each loan's error<br/>PD vs what happened"):::ml
+    T("Fit a small tree<br/>to the errors"):::ml
+    U("Add tree × learning rate<br/>to every loan's score"):::ml
+    V{"AUC improved in<br/>the last 100 trees?"}:::decision
+    K(["Stop · keep the<br/>best tree count"]):::good
+    S --> E --> T --> U --> V
+    V -->|yes · next tree| E
+    V -->|no| K
+    </div></div>
+    <p>The Train page shows this live: each step, every Optuna trial as it finishes, and the learning curve growing tree by
+      tree. Insights → Model draws the trained model's real first tree.</p>
+
+    <!-- 6 -->
+    <h2 id="policy">6. The decision policy</h2>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    PD("Raw PD<br/>from the model"):::ml
+    subgraph OLD["Baseline (old way)"]
+        direction LR
+        B{"PD < 20%?"}:::decision
+        A0(["Approve"]):::good
+        R0(["Deny · many good<br/>thin-file payers"]):::bad
+        B -->|yes| A0
+        B -->|no| R0
+    end
+    subgraph NEW["Second look (new way)"]
+        direction LR
+        C("Calibrate per segment<br/>Platt scaling"):::ml
+        DR("Drift correction<br/>~0.008 log-odds / week"):::ml
+        T{"Segment threshold<br/>est 17.5% · thin 24.5%"}:::decision
+        A(["Approve"]):::good
+        R(["Deny"]):::bad
+        C --> DR --> T
+        T -->|below| A
+        T -->|above| R
+    end
+    PD --> B
+    PD --> C
+    </div></div>
+    <ul>
+      <li><strong>Inclusion gap</strong> = among applicants who actually repaid, approval rate of established minus thin-file.</li>
+      <li><strong>Inclusive Profit Score</strong> = profit − penalty × |gap|, counted only if the default rate of approved loans
+        stays under 12%. Penalty: $100,000 per gap point per 100k applicants.</li>
+      <li>Thresholds are searched on weeks 86–91 (every pair from 5% to 50%) and the best score wins.</li>
+    </ul>
+
+    <!-- 7 -->
+    <h2 id="setup">7. Setup guide</h2>
+    <p><strong>You need:</strong> Python 3.9+, Node.js 18+, git, and the dataset folder <code>synth_home_credit</code>
+      (containing <code>csv_files/</code> and <code>solution.csv</code>). No GPU, no accounts.</p>
+    <ol class="steps">
+      <li><strong>Get the code</strong>
+        <pre><code>git clone https://github.com/Break-Through-Tech/American-Express-1C-second-look-lending.git
+cd American-Express-1C-second-look-lending</code></pre></li>
+      <li><strong>Add the dataset</strong>
+        <p>Put (or unzip) it at <code>data/synth_home_credit/</code>. That folder is git-ignored, so the data is never
+          committed. If you keep it elsewhere, point to it instead:</p>
+        <pre><code>export SLL_DATA_DIR=/path/to/synth_home_credit</code></pre></li>
+      <li><strong>Install and start the backend</strong>
+        <pre><code>cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+scripts/fix_lightgbm_macos.sh        # macOS only, if Homebrew's libomp is missing
+.venv/bin/uvicorn app.main:app --port 8000 --reload</code></pre>
+        <p>Check it: <a href="http://localhost:8000/api/health">http://localhost:8000/api/health</a> should say
+          <code>"data_found": true</code>. Interactive API docs: <a href="http://localhost:8000/docs">/docs</a>.</p></li>
+      <li><strong>Install and start the frontend</strong> (second terminal)
+        <pre><code>cd frontend
+npm install
+npm run dev                          # open http://localhost:5173</code></pre>
+        <p>Or build once with <code>npm run build</code> and use <a href="http://localhost:8000">http://localhost:8000</a>
+          — FastAPI serves the built app.</p></li>
+      <li><strong>Train your first models</strong>
+        <p>On the Train page, train Logistic Regression, then Random Forest, then LightGBM. The first request builds the
+          feature tables (about 20 seconds) and caches them. Each model takes 5–20 seconds; LightGBM with 20 Optuna trials
+          about a minute.</p></li>
+    </ol>
+    <div class="tip"><strong>Prefer the terminal?</strong>
+      <code>.venv/bin/python -m app.cli --model lightgbm --trials 20</code> trains a run without the UI.
+      The notebook <code>notebooks/second_look_lending.ipynb</code> runs the whole project on free Colab.</div>
+
+    <!-- 8 -->
+    <h2 id="use">8. How to use the app</h2>
+    <div class="grid-2">
+      <div class="card page-card">
+        <h3>Overview &amp; EDA</h3>
+        <div class="path">/</div>
+        <p>Dataset size, default rates per segment, the weekly drift chart, a feature-vs-default explorer, table depths and
+          missing values. <strong>Start here</strong> to understand the problem.</p>
+      </div>
+      <div class="card page-card">
+        <h3>Insights: data &amp; model</h3>
+        <div class="path">/insights · /insights?tab=model</div>
+        <p><em>Raw data</em>: click any table to see 5 records, its columns and stats; follow one applicant from raw rows to
+          one feature row. <em>Model</em>: the big-picture flow, the algorithm's training loop, its real first tree, how one
+          prediction is built, and what decisions are worth.</p>
+      </div>
+      <div class="card page-card">
+        <h3>Train models</h3>
+        <div class="path">/train</div>
+        <p>Pick a model, adjust settings (hover ⓘ for what each does), choose Optuna trials, press Start. The live panel shows
+          each step, Optuna trials and the learning curve.</p>
+      </div>
+      <div class="card page-card">
+        <h3>Compare models</h3>
+        <div class="path">/models</div>
+        <p>AUC, LogLoss and Brier for every run, split by segment. Choose on <strong>Validation</strong>; the test tab is a
+          final check only. Click a run for details and feature importance.</p>
+      </div>
+      <div class="card page-card">
+        <h3>Policy lab</h3>
+        <div class="path">/policy</div>
+        <p>Change calibration, drift correction, gap penalty and default-rate ceiling, or set thresholds by hand. See
+          before / after profit and gap, profit and gap curves and calibration plots.</p>
+      </div>
+      <div class="card page-card">
+        <h3>Score applicant</h3>
+        <div class="path">/applicant · /applicant?case=1000001</div>
+        <p>Look up any loan, see the baseline and second-look decisions side by side, try what-if changes, and read the SHAP
+          reasons behind a LightGBM score.</p>
+      </div>
+    </div>
+    <div class="note"><strong>Golden rule:</strong> make every choice (model, settings, policy) on validation. Look at the
+      test numbers once, at the end. Picking by test score quietly turns the test set into training data.</div>
+
+    <!-- 9 -->
+    <h2 id="code">9. Code walkthrough</h2>
+    <p>The backend is plain Python functions with one-line comments; the frontend is plain React with one file per page.
+      Read in this order:</p>
+    <ol class="steps">
+      <li><strong><code>backend/app/config.py</code></strong> — paths, the cost model, the week split. 30 lines.</li>
+      <li><strong><code>backend/app/features.py</code></strong> — how 8 tables become 53 features. One small function per table.</li>
+      <li><strong><code>backend/app/models.py</code></strong> — <code>PDModel</code> wraps preprocessing and model for all three
+        algorithms; <code>fit()</code> and <code>predict_pd()</code> are the core.</li>
+      <li><strong><code>backend/app/training.py</code></strong> — <code>train()</code> ties it together: split, tune, fit, score, save.</li>
+      <li><strong><code>backend/app/policy.py</code></strong> — the money maths: calibration, drift, profit, gap, threshold search.</li>
+      <li><strong><code>backend/app/main.py</code></strong> — every API route in one file; each route is a few lines.</li>
+      <li><strong><code>frontend/src/api.js</code></strong> then <strong><code>frontend/src/pages/</code></strong> — every API call, then one page at a time.</li>
+    </ol>
+
+    <h3>Every backend file</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>Job</th></tr></thead>
+        <tbody>
+          <tr><td><code>config.py</code></td><td>Paths, cost model, week split</td></tr>
+          <tr><td><code>features.py</code></td><td>Read CSVs, aggregate, build and cache the feature table, thin-file flag</td></tr>
+          <tr><td><code>models.py</code></td><td>The three models (preprocessing + estimator), Optuna search space</td></tr>
+          <tr><td><code>param_help.py</code></td><td>Plain-English help for every hyperparameter (shown as tooltips)</td></tr>
+          <tr><td><code>training.py</code></td><td>One training run end to end, with live progress</td></tr>
+          <tr><td><code>jobs.py</code></td><td>Background thread that runs training jobs</td></tr>
+          <tr><td><code>policy.py</code></td><td>Metrics, calibration, drift, profit, inclusion gap, threshold search</td></tr>
+          <tr><td><code>analysis.py</code></td><td>Compares the four policies for a run and saves the result</td></tr>
+          <tr><td><code>storage.py</code></td><td>Save, list, load and delete runs</td></tr>
+          <tr><td><code>eda.py</code></td><td>Numbers for the Overview page</td></tr>
+          <tr><td><code>insights.py</code>, <code>algorithm.py</code>, <code>feature_info.py</code></td><td>Numbers and descriptions for the Insights page</td></tr>
+          <tr><td><code>applicant.py</code></td><td>Score one applicant with what-if changes</td></tr>
+          <tr><td><code>main.py</code>, <code>cli.py</code></td><td>API routes and the command-line trainer</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>How one request travels</h3>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    U("PolicyLab.jsx<br/>page"):::ui
+    A("api.js<br/>POST /api/runs/{id}/policy"):::ui
+    R("main.py<br/>update_policy()"):::api
+    AN("analysis.py<br/>run_policy_analysis()"):::ml
+    P("policy.py<br/>calibrate · search · score"):::ml
+    S[("storage.py<br/>policy.json")]:::store
+    U --> A --> R --> AN
+    AN --> P
+    AN --> S
+    AN -. JSON result .-> U
+    </div></div>
+
+    <h3>Common changes</h3>
+    <div class="grid-2">
+      <div class="card">
+        <strong>Add a feature</strong>
+        <p>Add a column in <code>features.py</code> (inside the table's aggregation function, or in
+          <code>add_derived_features</code>). Delete <code>backend/artifacts/features/</code> or call
+          <code>POST /api/features/build</code>, retrain, then run <code>scripts/make_data_dictionary.py</code>.</p>
+      </div>
+      <div class="card">
+        <strong>Add a model</strong>
+        <p>Add it to <code>MODEL_NAMES</code> and <code>DEFAULT_PARAMS</code> in <code>models.py</code>, build it in
+          <code>build_model()</code>, give it a search space in <code>suggest_params()</code> and help text in
+          <code>param_help.py</code>. The UI picks it up automatically.</p>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <h2 id="api">10. API reference</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>What it does</th></tr></thead>
+        <tbody>
+          <tr><td>GET</td><td><code>/api/health</code></td><td>Is the dataset found, are features built</td></tr>
+          <tr><td>POST</td><td><code>/api/features/build</code></td><td>Rebuild the feature tables (background job)</td></tr>
+          <tr><td>GET</td><td><code>/api/eda/overview</code>, <code>/api/eda/feature/{name}</code></td><td>Overview numbers, default rate by bin</td></tr>
+          <tr><td>GET</td><td><code>/api/models</code></td><td>Model types, defaults, parameter help</td></tr>
+          <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>tune_trials</code>, weeks</td></tr>
+          <tr><td>GET</td><td><code>/api/jobs</code>, <code>/api/jobs/{id}</code></td><td>Job list, or one job with logs and live progress</td></tr>
+          <tr><td>GET / DELETE</td><td><code>/api/runs</code>, <code>/api/runs/{id}</code></td><td>Trained runs and their metrics; delete a run</td></tr>
+          <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get or re-run the policy analysis with new options</td></tr>
+          <tr><td>GET</td><td><code>/api/insights/raw</code>, <code>/api/runs/{id}/insights</code>, <code>/api/runs/{id}/algorithm</code></td><td>Insights page data</td></tr>
+          <tr><td>GET / POST</td><td><code>/api/applicants/random</code>, <code>/api/runs/{id}/score</code></td><td>Random applicants; score one with what-if changes</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 11 -->
+    <h2 id="troubleshooting">11. Troubleshooting</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
+        <tbody>
+          <tr><td><code>Library not loaded: libomp.dylib</code> (macOS)</td><td>Run <code>backend/scripts/fix_lightgbm_macos.sh</code>, or <code>brew install libomp</code>.</td></tr>
+          <tr><td><code>"data_found": false</code></td><td>Put the dataset in <code>data/synth_home_credit</code> or set <code>SLL_DATA_DIR</code>, then restart the backend.</td></tr>
+          <tr><td>Port 8000 or 5173 already in use</td><td>Stop the old server, or start with another <code>--port</code> (update <code>vite.config.js</code> to match).</td></tr>
+          <tr><td>"Run … not found" on a page</td><td>The run was deleted; pick another run, or train a new one.</td></tr>
+          <tr><td>Feature changes don't show up</td><td>Delete <code>backend/artifacts/features/</code> (or call <code>POST /api/features/build</code>) and retrain.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 12 -->
+    <h2 id="glossary">12. Glossary</h2>
+    <dl class="glossary">
+      <div><dt>PD</dt><dd>Probability of default: the model's estimate that a loan won't be repaid.</dd></div>
+      <div><dt>Thin-file</dt><dd>An applicant with no credit-bureau history.</dd></div>
+      <div><dt>AUC</dt><dd>How well the model ranks people: 0.5 is guessing, 1 is perfect.</dd></div>
+      <div><dt>LogLoss / Brier</dt><dd>How far PDs are from what happened. Lower is better.</dd></div>
+      <div><dt>Calibration</dt><dd>Whether a PD of 20% really means 20 in 100 default.</dd></div>
+      <div><dt>Drift</dt><dd>Data changing over time; here thin-file risk falls week by week.</dd></div>
+      <div><dt>Early stopping</dt><dd>Stop adding trees once validation stops improving.</dd></div>
+      <div><dt>Epoch</dt><dd>A full pass over the data. Not used by these models; see section 5.</dd></div>
+      <div><dt>Inclusion gap</dt><dd>Approval rate among repayers: established minus thin-file.</dd></div>
+      <div><dt>Out-of-time test</dt><dd>Later weeks the model never trained on, scored once at the end.</dd></div>
+    </dl>
+  </main>
+</div>
+
+<script type="module">
+  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+
+  const root = document.documentElement;
+  const dark = root.dataset.theme === "dark" || (!root.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  // Soft fills with a strong border per role; dark mode gets its own darker set
+  const palette = dark ? {
+    ui: ["#172a40", "#5b9ef0", "#dbe8fb"], api: ["#173229", "#3cc392", "#d5f1e6"], ml: ["#261f44", "#9a85f0", "#e6e0fd"],
+    data: ["#3a2a10", "#e0a640", "#f8e7c8"], bureau: ["#3a2116", "#f08a5d", "#fbe1d6"], store: ["#212b27", "#8a9792", "#e1e8e5"],
+    decision: ["#3a2116", "#f08a5d", "#fbe1d6"], good: ["#15301f", "#4cc477", "#d6f2e0"], bad: ["#3a1b1b", "#ef6b6b", "#f8dada"],
+  } : {
+    ui: ["#e3eefb", "#2a78d6", "#0d2c52"], api: ["#e2f1eb", "#0f7b5a", "#0b3b2c"], ml: ["#efeafd", "#6b4fd8", "#2a1d63"],
+    data: ["#fdf1df", "#d98a1e", "#4a2f05"], bureau: ["#fde6dc", "#eb6834", "#4a1d0c"], store: ["#eef1f0", "#6f7c77", "#1d2a26"],
+    decision: ["#fdebe3", "#eb6834", "#4a1d0c"], good: ["#e3f4e8", "#12823b", "#0b3d1c"], bad: ["#fbe7e6", "#c62f2f", "#4d1111"],
+  };
+  const classDefs = Object.entries(palette)
+    .map(([name, [fill, stroke, text]]) => `classDef ${name} fill:${fill},stroke:${stroke},stroke-width:1.5px,color:${text}`)
+    .join("\n");
+
+  mermaid.initialize({
+    startOnLoad: false,
+    theme: "base",
+    flowchart: { curve: "basis", htmlLabels: true, padding: 14, nodeSpacing: 36, rankSpacing: 48 },
+    sequence: { mirrorActors: false, boxMargin: 8, actorMargin: 40 },
+    themeVariables: {
+      darkMode: dark,
+      fontFamily: "system-ui, -apple-system, Segoe UI, sans-serif",
+      fontSize: "14px",
+      background: dark ? "#18201d" : "#ffffff",
+      primaryColor: dark ? "#212b27" : "#ffffff",
+      primaryTextColor: dark ? "#e9efed" : "#13221d",
+      primaryBorderColor: dark ? "#34413b" : "#d5dbd8",
+      lineColor: dark ? "#8a9792" : "#7a8783",
+      textColor: dark ? "#e9efed" : "#13221d",
+      clusterBkg: dark ? "#1c2522" : "#f7f9f8",
+      clusterBorder: dark ? "#34413b" : "#d5dbd8",
+      edgeLabelBackground: dark ? "#18201d" : "#ffffff",
+      actorBkg: dark ? "#172a40" : "#e3eefb",
+      actorBorder: dark ? "#5b9ef0" : "#2a78d6",
+      actorTextColor: dark ? "#dbe8fb" : "#0d2c52",
+      signalColor: dark ? "#b0bdb8" : "#4b5a55",
+      signalTextColor: dark ? "#e9efed" : "#13221d",
+      labelBoxBkgColor: dark ? "#261f44" : "#efeafd",
+      labelBoxBorderColor: dark ? "#9a85f0" : "#6b4fd8",
+      loopTextColor: dark ? "#e6e0fd" : "#2a1d63",
+      noteBkgColor: dark ? "#3a2a10" : "#fdf1df",
+      noteBorderColor: dark ? "#e0a640" : "#d98a1e",
+    },
+  });
+
+  // Render one diagram at a time with its own id, so diagrams never overwrite each other
+  const decoder = document.createElement("textarea");
+  const blocks = [...document.querySelectorAll(".mermaid")];
+  for (const [i, block] of blocks.entries()) {
+    decoder.innerHTML = block.innerHTML;  // turns &gt; back into > while keeping <br> as text
+    try {
+      // Flowcharts share the role colors defined above
+      const source = decoder.value.trim().startsWith("flowchart") ? `${decoder.value}\n${classDefs}` : decoder.value;
+      const { svg } = await mermaid.render(`diagram-${i}`, source);
+      block.innerHTML = svg;
+    } catch (error) {
+      block.textContent = `Diagram ${i + 1} could not be drawn: ${error.message}`;
+    }
+    block.dataset.processed = "true";
+  }
+</script>
+</body>
+</html>

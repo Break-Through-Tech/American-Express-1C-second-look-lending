@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second-Look Lending Architecture</title>
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f4f6f5;
+    --surface: #ffffff;
+    --surface-2: #eef1f0;
+    --border: #d5dbd8;
+    --text: #13221d;
+    --text-2: #4b5a55;
+    --text-3: #77847f;
+    --accent: #0f7b5a;
+    --accent-soft: #e2f1eb;
+    --blue: #2a78d6;
+    --blue-soft: #e3eefb;
+    --orange: #eb6834;
+    --orange-soft: #fdebe3;
+    --aqua: #1baf7a;
+    --aqua-soft: #e0f5ed;
+    --gray: #8a918e;
+    --good: #12823b;
+    --bad: #c62f2f;
+    --arrow: #6f7c77;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0f1513;
+      --surface: #18201d;
+      --surface-2: #212b27;
+      --border: #34413b;
+      --text: #e9efed;
+      --text-2: #b0bdb8;
+      --text-3: #84918c;
+      --accent: #3cc392;
+      --accent-soft: #173229;
+      --blue: #3987e5;
+      --blue-soft: #172a40;
+      --orange: #d95926;
+      --orange-soft: #3a2116;
+      --aqua: #199e70;
+      --aqua-soft: #12322a;
+      --gray: #7d8582;
+      --good: #4cc477;
+      --bad: #ef6b6b;
+      --arrow: #8a9792;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0f1513; --surface: #18201d; --surface-2: #212b27; --border: #34413b;
+    --text: #e9efed; --text-2: #b0bdb8; --text-3: #84918c; --accent: #3cc392; --accent-soft: #173229;
+    --blue: #3987e5; --blue-soft: #172a40; --orange: #d95926; --orange-soft: #3a2116;
+    --aqua: #199e70; --aqua-soft: #12322a; --gray: #7d8582; --good: #4cc477; --bad: #ef6b6b; --arrow: #8a9792;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.6 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1040px; margin: 0 auto; padding: 40px 16px 80px; }
+  h1 { font-size: 32px; line-height: 1.2; margin: 0 0 8px; letter-spacing: -0.02em; }
+  h2 { font-size: 22px; margin: 48px 0 12px; letter-spacing: -0.01em; }
+  h3 { font-size: 16px; margin: 24px 0 8px; }
+  p { margin: 0 0 12px; color: var(--text-2); max-width: 760px; }
+  .eyebrow { color: var(--accent); font-weight: 700; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+  .lead { font-size: 17px; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+  pre { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 20px 0 0; font-size: 14px; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .figure { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+  .figure svg { width: 100%; height: auto; display: block; }
+  .caption { font-size: 13px; color: var(--text-3); margin-top: 8px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 24px 0; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .stat .label { font-size: 13px; color: var(--text-2); }
+  .stat .value { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stat .hint { font-size: 12px; color: var(--text-3); }
+  @media (max-width: 760px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text-2); font-size: 13px; font-weight: 600; }
+  td.num, th.num { text-align: right; white-space: nowrap; }
+  tr.hl td { background: var(--aqua-soft); font-weight: 600; }
+
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .compare { grid-template-columns: 1fr; } }
+  .policy { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--surface); }
+  .policy.after { border: 2px solid var(--aqua); }
+  .policy .big { font-size: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .policy .row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .up { color: var(--good); font-weight: 600; font-size: 13px; }
+
+  .bars { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+  .bar { display: grid; grid-template-columns: 170px 1fr 52px; gap: 10px; align-items: center; font-size: 13px; }
+  .bar .track { height: 14px; background: var(--surface-2); border-radius: 4px; overflow: hidden; }
+  .bar .fill { height: 100%; border-radius: 4px; }
+  .bar .v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  @media (max-width: 560px) { .bar { grid-template-columns: 1fr 52px; } .bar .track { grid-column: 1 / -1; grid-row: 2; } }
+  .legend { display: flex; gap: 16px; font-size: 13px; color: var(--text-2); flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+  .formula { font-family: ui-monospace, "SF Mono", Menlo, monospace; background: var(--surface-2); border-radius: 8px; padding: 12px 14px; font-size: 14px; margin: 8px 0; overflow-x: auto; }
+  .steps { counter-reset: s; list-style: none; padding: 0; margin: 0; }
+  .steps li { counter-increment: s; position: relative; padding: 0 0 14px 40px; color: var(--text-2); }
+  .steps li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: #fff; font-weight: 700; font-size: 13px; display: grid; place-items: center; }
+  .steps li strong { color: var(--text); }
+
+  /* SVG diagram styles */
+  .d-box { fill: var(--surface); stroke: var(--border); stroke-width: 1.5; }
+  .d-soft { fill: var(--surface-2); stroke: var(--border); stroke-width: 1; }
+  .d-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .d-blue { fill: var(--blue-soft); stroke: var(--blue); stroke-width: 1.5; }
+  .d-orange { fill: var(--orange-soft); stroke: var(--orange); stroke-width: 1.5; }
+  .d-aqua { fill: var(--aqua-soft); stroke: var(--aqua); stroke-width: 1.5; }
+  .d-title { fill: var(--text); font: 600 15px system-ui, sans-serif; }
+  .d-text { fill: var(--text); font: 13px system-ui, sans-serif; }
+  .d-mono { fill: var(--text); font: 12px ui-monospace, Menlo, monospace; }
+  .d-sub { fill: var(--text-2); font: 12px system-ui, sans-serif; }
+  .d-small { fill: var(--text-3); font: 11px system-ui, sans-serif; }
+  .d-line { stroke: var(--arrow); stroke-width: 1.5; fill: none; }
+  .d-dash { stroke: var(--arrow); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
+  .d-arrowhead { fill: var(--arrow); }
+  .d-train { fill: var(--accent); }
+  .d-val { fill: #d98a1e; }
+  .d-test { fill: #c24a32; }
+  .d-white { fill: #ffffff; font: 600 13px system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<main>
+
+  <div class="eyebrow">Architecture &amp; model design</div>
+  <h1>Second-Look Lending</h1>
+  <p class="lead">A web app that predicts each applicant's probability of default (PD), turns it into an approve / deny
+    decision that maximizes profit, and gives thin-file applicants (no credit history) a fair second look.</p>
+  <p>Backend: Python · FastAPI · pandas · scikit-learn · LightGBM · Optuna. Frontend: React (Vite) · Recharts.
+    Data: synthetic lending dataset, 1,000,000 train loans (weeks 0–91) and 200,000 out-of-time test loans (weeks 92–107).</p>
+
+  <nav class="toc">
+    <a href="#results">1. Results</a>
+    <a href="#system">2. System architecture</a>
+    <a href="#pipeline">3. Model pipeline</a>
+    <a href="#features">4. Features</a>
+    <a href="#models">5. Models</a>
+    <a href="#policy">6. Decision policy</a>
+    <a href="#api">7. API</a>
+    <a href="#run">8. How to run</a>
+  </nav>
+
+  <!-- ===================================================== RESULTS -->
+  <h2 id="results">1. Results</h2>
+  <p>Out-of-time test set, 200,000 loans, scored once against <code>solution.csv</code>.
+    The model was picked on validation AUC (LightGBM + Optuna); calibration and thresholds were tuned on validation weeks 86–91 only.</p>
+
+  <div class="compare">
+    <div class="policy">
+      <div style="font-size:13px;color:var(--text-2)">Baseline policy · raw PD &lt; 20%</div>
+      <div class="row" style="margin-top:8px">
+        <div><div style="font-size:13px;color:var(--text-2)">Profit</div><div class="big">$147.7M</div></div>
+        <div><div style="font-size:13px;color:var(--text-2)">Inclusion gap</div><div class="big">36.9 pts</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-3);margin-top:6px">60.6% approved · 7.8% default rate among approved</div>
+    </div>
+    <div class="policy after">
+      <div style="font-size:13px;color:var(--text-2)">Second-look policy · established &lt; 17.5%, thin-file &lt; 24.5% (calibrated PD)</div>
+      <div class="row" style="margin-top:8px">
+        <div><div style="font-size:13px;color:var(--text-2)">Profit</div><div class="big">$153.2M</div><div class="up">▲ $5.6M</div></div>
+        <div><div style="font-size:13px;color:var(--text-2)">Inclusion gap</div><div class="big">−5.4 pts</div><div class="up">▼ 31.5 pts closer to zero</div></div>
+      </div>
+      <div style="font-size:13px;color:var(--text-3);margin-top:6px">70.3% approved · 9.1% default rate among approved</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Of applicants who repaid, what share got approved?</h3>
+    <div class="legend"><span><i style="background:var(--blue)"></i>Established</span><span><i style="background:var(--orange)"></i>Thin-file</span></div>
+    <div class="bars">
+      <div class="bar"><span>Baseline · established</span><div class="track"><div class="fill" style="width:78.1%;background:var(--blue)"></div></div><span class="v">78.1%</span></div>
+      <div class="bar"><span>Baseline · thin-file</span><div class="track"><div class="fill" style="width:41.2%;background:var(--orange)"></div></div><span class="v">41.2%</span></div>
+      <div class="bar"><span>Second look · established</span><div class="track"><div class="fill" style="width:75.2%;background:var(--blue)"></div></div><span class="v">75.2%</span></div>
+      <div class="bar"><span>Second look · thin-file</span><div class="track"><div class="fill" style="width:80.6%;background:var(--orange)"></div></div><span class="v">80.6%</span></div>
+    </div>
+    <p class="caption">19,407 more thin-file applicants who repaid are approved (28,994 → 9,587 good payers denied). The gap is now slightly negative: thin-file good payers are approved a little more often than established ones.</p>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0">Honest reading</h3>
+    <p style="margin:0">Calibration does most of the work: "Calibrated PD &lt; 20%" is the most profitable policy on test. The per-segment
+      thresholds are tuned on only 6 weeks, so they are noisier and here overshoot past zero gap. The gap penalty decides how much
+      profit to trade for fairness, and can be changed in the Policy lab.</p>
+  </div>
+
+  <h3>All policies (test)</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Policy</th><th class="num">Profit</th><th class="num">Inclusion gap</th><th class="num">Approved</th><th class="num">Default rate of approved</th></tr></thead>
+      <tbody>
+        <tr><td>Approve everyone (naïve)</td><td class="num">$64.4M</td><td class="num">0.0 pts</td><td class="num">100%</td><td class="num">16.8%</td></tr>
+        <tr><td>Baseline: raw PD &lt; 20%</td><td class="num">$147.7M</td><td class="num">36.9 pts</td><td class="num">60.6%</td><td class="num">7.8%</td></tr>
+        <tr><td>Calibrated PD &lt; 20%</td><td class="num">$155.3M</td><td class="num">9.4 pts</td><td class="num">69.5%</td><td class="num">8.8%</td></tr>
+        <tr class="hl"><td>Second-look policy</td><td class="num">$153.2M</td><td class="num">−5.4 pts</td><td class="num">70.3%</td><td class="num">9.1%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Models</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th class="num">Validation AUC</th><th class="num">Test AUC</th><th class="num">Test LogLoss</th><th class="num">Test Brier</th><th class="num">AUC established</th><th class="num">AUC thin-file</th><th class="num">Profit → second look</th><th class="num">Gap → second look</th></tr></thead>
+      <tbody>
+        <tr><td>Logistic Regression (baseline)</td><td class="num">0.7586</td><td class="num">0.7595</td><td class="num">0.3914</td><td class="num">0.1213</td><td class="num">0.7885</td><td class="num">0.7144</td><td class="num">$144.4M → $151.5M</td><td class="num">38.4 → −1.9</td></tr>
+        <tr><td>Random Forest (50% sample)</td><td class="num">0.7610</td><td class="num">0.7613</td><td class="num">0.3898</td><td class="num">0.1208</td><td class="num">0.7945</td><td class="num">0.7075</td><td class="num">$141.0M → $152.7M</td><td class="num">47.9 → −1.8</td></tr>
+        <tr><td>LightGBM (defaults)</td><td class="num">0.7669</td><td class="num">0.7674</td><td class="num">0.3863</td><td class="num">0.1200</td><td class="num">0.7957</td><td class="num">0.7151</td><td class="num">$147.6M → $154.1M</td><td class="num">36.0 → −0.3</td></tr>
+        <tr class="hl"><td>LightGBM + Optuna (20 trials)</td><td class="num">0.7674</td><td class="num">0.7676</td><td class="num">0.3862</td><td class="num">0.1200</td><td class="num">0.7961</td><td class="num">0.7153</td><td class="num">$147.7M → $153.2M</td><td class="num">36.9 → −5.4</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption">LightGBM beats the logistic-regression baseline on AUC and LogLoss. Every model raises profit and closes the gap.
+    Deliverables: the web app, <code>notebooks/second_look_lending.ipynb</code> (EDA report + models + policy, runs on Colab),
+    <code>doc/DATA_DICTIONARY.md</code>, and this document.</p>
+
+  <!-- ===================================================== SYSTEM -->
+  <h2 id="system">2. System architecture</h2>
+  <p>The React app talks to one FastAPI server. Training runs in a background thread so the UI stays responsive
+    and can show live progress. Everything the models produce is saved to <code>backend/artifacts/</code>.</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 960 560" role="img" aria-label="System architecture: React UI calls FastAPI, which reads the CSV data and writes artifacts">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="d-arrowhead"/>
+        </marker>
+      </defs>
+
+      <!-- React UI -->
+      <rect x="20" y="16" width="920" height="104" rx="12" class="d-blue"/>
+      <text x="40" y="44" class="d-title">React UI</text>
+      <text x="128" y="44" class="d-sub">Vite · Recharts · port 5173 (dev) or served by FastAPI</text>
+      <g>
+        <rect x="40" y="60" width="166" height="40" rx="8" class="d-box"/><text x="123" y="85" text-anchor="middle" class="d-text">Overview &amp; EDA</text>
+        <rect x="220" y="60" width="166" height="40" rx="8" class="d-box"/><text x="303" y="85" text-anchor="middle" class="d-text">Train models</text>
+        <rect x="400" y="60" width="166" height="40" rx="8" class="d-box"/><text x="483" y="85" text-anchor="middle" class="d-text">Compare models</text>
+        <rect x="580" y="60" width="166" height="40" rx="8" class="d-box"/><text x="663" y="85" text-anchor="middle" class="d-text">Policy lab</text>
+        <rect x="760" y="60" width="160" height="40" rx="8" class="d-box"/><text x="840" y="85" text-anchor="middle" class="d-text">Score applicant</text>
+      </g>
+
+      <!-- REST arrow -->
+      <line x1="480" y1="122" x2="480" y2="160" class="d-line" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text x="492" y="146" class="d-sub">REST / JSON  ·  /api/…</text>
+
+      <!-- FastAPI -->
+      <rect x="20" y="164" width="920" height="248" rx="12" class="d-accent"/>
+      <text x="40" y="192" class="d-title">FastAPI server</text>
+      <text x="170" y="192" class="d-sub">backend/app · port 8000</text>
+
+      <rect x="40" y="206" width="880" height="36" rx="8" class="d-box"/>
+      <text x="56" y="229" class="d-mono">main.py</text>
+      <text x="130" y="229" class="d-sub">REST routes: health · eda · train · jobs · runs · policy · score</text>
+
+      <!-- row 1 -->
+      <rect x="40" y="256" width="200" height="60" rx="8" class="d-box"/>
+      <text x="56" y="280" class="d-mono">features.py</text><text x="56" y="300" class="d-small">CSV → 53 features per loan</text>
+      <rect x="256" y="256" width="200" height="60" rx="8" class="d-box"/>
+      <text x="272" y="280" class="d-mono">eda.py</text><text x="272" y="300" class="d-small">segments, drift, missing</text>
+      <rect x="472" y="256" width="200" height="60" rx="8" class="d-box"/>
+      <text x="488" y="280" class="d-mono">training.py</text><text x="488" y="300" class="d-small">split · Optuna · fit · save</text>
+      <rect x="688" y="256" width="232" height="60" rx="8" class="d-box"/>
+      <text x="704" y="280" class="d-mono">jobs.py</text><text x="704" y="300" class="d-small">background thread · progress · logs</text>
+
+      <!-- row 2 -->
+      <rect x="40" y="330" width="160" height="60" rx="8" class="d-box"/>
+      <text x="56" y="354" class="d-mono">models.py</text><text x="56" y="374" class="d-small">LR · RF · LightGBM</text>
+      <rect x="216" y="330" width="160" height="60" rx="8" class="d-box"/>
+      <text x="232" y="354" class="d-mono">analysis.py</text><text x="232" y="374" class="d-small">compare 4 policies</text>
+      <rect x="392" y="330" width="176" height="60" rx="8" class="d-box"/>
+      <text x="408" y="354" class="d-mono">policy.py</text><text x="408" y="374" class="d-small">cost · calibration · gap</text>
+      <rect x="584" y="330" width="160" height="60" rx="8" class="d-box"/>
+      <text x="600" y="354" class="d-mono">applicant.py</text><text x="600" y="374" class="d-small">score one case · SHAP</text>
+      <rect x="760" y="330" width="160" height="60" rx="8" class="d-box"/>
+      <text x="776" y="354" class="d-mono">storage.py</text><text x="776" y="374" class="d-small">save / load runs</text>
+
+      <!-- arrows to storage -->
+      <line x1="140" y1="414" x2="140" y2="456" class="d-line" marker-end="url(#arr)"/>
+      <text x="152" y="440" class="d-sub">reads</text>
+      <line x1="820" y1="414" x2="820" y2="456" class="d-line" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text x="704" y="440" class="d-sub">reads / writes</text>
+
+      <!-- data -->
+      <rect x="20" y="460" width="440" height="84" rx="12" class="d-soft"/>
+      <text x="40" y="488" class="d-title">Dataset folder</text>
+      <text x="40" y="510" class="d-mono">csv_files/train/*.csv · csv_files/test/*.csv</text>
+      <text x="40" y="530" class="d-mono">solution.csv  (test answer key, final scoring only)</text>
+
+      <!-- artifacts -->
+      <rect x="500" y="460" width="440" height="84" rx="12" class="d-soft"/>
+      <text x="520" y="488" class="d-title">backend/artifacts/</text>
+      <text x="520" y="510" class="d-mono">features/{train,test}_features.parquet</text>
+      <text x="520" y="530" class="d-mono">runs/&lt;id&gt;/ model · predictions · policy · calibrator</text>
+    </svg>
+    <div class="caption">One server, two kinds of storage: the read-only dataset, and the generated artifacts (cached features and one folder per trained run).</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Page</th><th>What you can do</th></tr></thead>
+      <tbody>
+        <tr><td>Insights: data &amp; model</td><td><em>Raw data</em>: table map, column types and stats, sample rows, one established and one thin-file applicant followed from raw rows to the final feature row. <em>Model</em>: features, time split, how the model works, hyperparameters in plain English, learning curve, what it learned, PD spread per segment, decisions in dollars, glossary</td></tr>
+        <tr><td>Overview &amp; EDA</td><td>Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values</td></tr>
+        <tr><td>Train models</td><td>Pick a model and edit its settings — every hyperparameter and data setting is explained (what it does, typical range, effect). A live panel shows each training step, the time split, Optuna trials as they finish and the learning curve tree by tree</td></tr>
+        <tr><td>Compare models</td><td>AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, delete runs</td></tr>
+        <tr><td>Policy lab</td><td>Choose calibration, drift correction, penalty, ceiling, or set thresholds by hand; before/after profit and gap, profit and gap curves, calibration plots</td></tr>
+        <tr><td>Score applicant</td><td>Look up a case_id, see baseline vs second-look decision, try what-if changes, see SHAP reasons (LightGBM)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===================================================== PIPELINE -->
+  <h2 id="pipeline">3. Model pipeline</h2>
+  <p>From eight raw tables to a decision. The two coloured paths show how the same PD is used by the
+    baseline policy (gray) and by the second-look policy (aqua).</p>
+
+  <div class="figure">
+    <svg viewBox="0 0 960 760" role="img" aria-label="Model pipeline from raw tables to approve or deny decisions">
+      <defs>
+        <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" class="d-arrowhead"/>
+        </marker>
+      </defs>
+
+      <!-- Step 1: tables -->
+      <text x="20" y="28" class="d-small">STEP 1 · RAW TABLES (joined by case_id)</text>
+      <g>
+        <rect x="20" y="40" width="140" height="34" rx="6" class="d-box"/><text x="90" y="62" text-anchor="middle" class="d-mono">base</text>
+        <rect x="20" y="82" width="140" height="34" rx="6" class="d-box"/><text x="90" y="104" text-anchor="middle" class="d-mono">static_0</text>
+        <rect x="20" y="124" width="140" height="34" rx="6" class="d-box"/><text x="90" y="146" text-anchor="middle" class="d-mono">static_cb_0</text>
+        <text x="90" y="178" text-anchor="middle" class="d-small">depth 0 · join directly</text>
+
+        <rect x="190" y="40" width="170" height="34" rx="6" class="d-box"/><text x="275" y="62" text-anchor="middle" class="d-mono">person_1</text>
+        <rect x="190" y="82" width="170" height="34" rx="6" class="d-orange"/><text x="275" y="104" text-anchor="middle" class="d-mono">credit_bureau_a_1</text>
+        <rect x="190" y="124" width="170" height="34" rx="6" class="d-orange"/><text x="275" y="146" text-anchor="middle" class="d-mono">credit_bureau_a_2</text>
+        <rect x="380" y="40" width="160" height="34" rx="6" class="d-box"/><text x="460" y="62" text-anchor="middle" class="d-mono">applprev_1</text>
+        <rect x="380" y="124" width="160" height="34" rx="6" class="d-box"/><text x="460" y="146" text-anchor="middle" class="d-mono">tax_registry_a_1</text>
+        <text x="365" y="178" text-anchor="middle" class="d-small">depth 1–2 · count / mean / max / sum per case_id first</text>
+      </g>
+
+      <!-- thin-file note -->
+      <rect x="580" y="40" width="360" height="118" rx="10" class="d-orange"/>
+      <text x="598" y="66" class="d-title">Thin-file flag</text>
+      <text x="598" y="90" class="d-text">No rows in credit_bureau_a_1 → thin_file = 1</text>
+      <text x="598" y="112" class="d-sub">30% of applicants. Bureau tables are the richest</text>
+      <text x="598" y="130" class="d-sub">signal, and exactly what thin-file applicants lack.</text>
+      <line x1="362" y1="99" x2="578" y2="99" class="d-dash" marker-end="url(#arr2)"/>
+
+      <!-- arrow to features -->
+      <line x1="280" y1="188" x2="280" y2="216" class="d-line" marker-end="url(#arr2)"/>
+
+      <!-- Step 2: feature table -->
+      <text x="20" y="214" class="d-small">STEP 2 · FEATURES</text>
+      <rect x="20" y="222" width="920" height="56" rx="10" class="d-box"/>
+      <text x="40" y="246" class="d-title">Feature table — 1 row per loan, 53 features</text>
+      <text x="40" y="266" class="d-sub">applicant facts · bureau aggregates · payment history · prior applications · tax income · thin_file · coverage · affordability ratios</text>
+
+      <!-- Step 3: time split -->
+      <text x="20" y="310" class="d-small">STEP 3 · TIME SPLIT BY WEEK_NUM</text>
+      <rect x="20" y="320" width="476" height="40" rx="6" class="d-train"/>
+      <text x="258" y="345" text-anchor="middle" class="d-white">Fit · weeks 0–79 · 869,559 loans</text>
+      <rect x="502" y="320" width="122" height="40" rx="6" class="d-val"/>
+      <text x="563" y="345" text-anchor="middle" class="d-white">Model val · 80–85</text>
+      <rect x="630" y="320" width="120" height="40" rx="6" class="d-val"/>
+      <text x="690" y="345" text-anchor="middle" class="d-white">Policy val · 86–91</text>
+      <rect x="756" y="320" width="184" height="40" rx="6" class="d-test"/>
+      <text x="848" y="345" text-anchor="middle" class="d-white">Test · 92–107 · 200k</text>
+      <text x="563" y="376" text-anchor="middle" class="d-small">early stop · Optuna</text>
+      <text x="690" y="376" text-anchor="middle" class="d-small">calibrate · thresholds</text>
+      <text x="848" y="376" text-anchor="middle" class="d-small">scored once (solution.csv)</text>
+
+      <!-- Step 4: models -->
+      <text x="20" y="406" class="d-small">STEP 4 · PD MODELS (same features, one PD each)</text>
+      <rect x="20" y="416" width="296" height="70" rx="10" class="d-box"/>
+      <text x="38" y="442" class="d-title">Logistic Regression</text>
+      <text x="38" y="464" class="d-sub">baseline · impute + log + scale + one-hot</text>
+      <rect x="332" y="416" width="296" height="70" rx="10" class="d-box"/>
+      <text x="350" y="442" class="d-title">Random Forest</text>
+      <text x="350" y="464" class="d-sub">bagged trees · native missing values</text>
+      <rect x="644" y="416" width="296" height="70" rx="10" class="d-accent"/>
+      <text x="662" y="442" class="d-title">LightGBM</text>
+      <text x="662" y="464" class="d-sub">boosting · early stopping · Optuna</text>
+
+      <line x1="168" y1="488" x2="440" y2="520" class="d-line"/>
+      <line x1="480" y1="488" x2="480" y2="520" class="d-line"/>
+      <line x1="792" y1="488" x2="520" y2="520" class="d-line"/>
+      <rect x="400" y="520" width="160" height="36" rx="18" class="d-box"/>
+      <text x="480" y="543" text-anchor="middle" class="d-title">raw PD</text>
+
+      <!-- Step 5: two paths -->
+      <text x="20" y="590" class="d-small">STEP 5 · DECISION</text>
+      <!-- baseline path -->
+      <path d="M440 558 L440 576 L170 576 L170 606" class="d-line" marker-end="url(#arr2)"/>
+      <rect x="20" y="610" width="300" height="130" rx="10" class="d-soft"/>
+      <text x="38" y="636" class="d-title">Baseline policy</text>
+      <text x="38" y="660" class="d-text">approve if raw PD &lt; 20%</text>
+      <text x="38" y="684" class="d-sub">Thin-file PD too high on test</text>
+      <text x="38" y="702" class="d-sub">(25.9% predicted vs 17.8% actual)</text>
+      <text x="38" y="726" class="d-text">$147.7M · gap 36.9 pts</text>
+
+      <!-- second-look path -->
+      <path d="M520 558 L520 576 L640 576 L640 606" class="d-line" marker-end="url(#arr2)"/>
+      <rect x="350" y="610" width="590" height="130" rx="10" class="d-aqua"/>
+      <text x="368" y="636" class="d-title">Second-look policy</text>
+      <rect x="368" y="648" width="176" height="56" rx="8" class="d-box"/>
+      <text x="380" y="670" class="d-text">① Calibrate per</text>
+      <text x="380" y="690" class="d-text">segment (Platt)</text>
+      <rect x="556" y="648" width="176" height="56" rx="8" class="d-box"/>
+      <text x="568" y="670" class="d-text">② Drift correction</text>
+      <text x="568" y="690" class="d-sub">thin-file −0.0084 / week</text>
+      <rect x="744" y="648" width="180" height="56" rx="8" class="d-box"/>
+      <text x="756" y="670" class="d-text">③ Segment thresholds</text>
+      <text x="756" y="690" class="d-sub">est &lt; 17.5% · thin &lt; 24.5%</text>
+      <line x1="545" y1="676" x2="554" y2="676" class="d-line" marker-end="url(#arr2)"/>
+      <line x1="733" y1="676" x2="742" y2="676" class="d-line" marker-end="url(#arr2)"/>
+      <text x="368" y="728" class="d-text">$153.2M · gap −5.4 pts</text>
+    </svg>
+    <div class="caption">Only the train file is used to fit and tune. Weeks 80–85 tune the model; weeks 86–91, which the model never saw, tune the policy. The test answer key is used once, to score.</div>
+  </div>
+
+  <!-- ===================================================== FEATURES -->
+  <h2 id="features">4. Feature engineering</h2>
+  <p>Built in <code>features.py</code>. Split files (<code>_0</code>, <code>_1</code>) are combined, duplicates removed,
+    many-row tables aggregated per <code>case_id</code>, then everything is joined onto <code>base</code>.
+    Missing values stay missing; counts become 0 when a case has no rows.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Source</th><th>Depth</th><th>Features</th></tr></thead>
+      <tbody>
+        <tr><td><code>static_0</code></td><td>0</td><td>income, credit amount, annuity, days employed, education, marital status, age (decision date − birth date)</td></tr>
+        <tr><td><code>static_cb_0</code></td><td>0</td><td>bureau risk score, number of queries, bureau description code</td></tr>
+        <tr><td><code>person_1</code></td><td>1</td><td>number of persons, household income, employment length, main applicant's housing type</td></tr>
+        <tr><td><code>credit_bureau_a_1</code></td><td>1</td><td><strong>bureau_rowcount</strong>, credit amount mean/max/sum, max overdue mean/max, days-past-due mean/max, count of DPD &gt; 30, share of each contract class</td></tr>
+        <tr><td><code>credit_bureau_a_2</code></td><td>2</td><td>payment rows, overdue amount mean/max/sum, share of overdue payments</td></tr>
+        <tr><td><code>applprev_1</code></td><td>1</td><td>prior applications, amount mean/max, approved count, days since last approval, status shares</td></tr>
+        <tr><td><code>tax_registry_a_1</code></td><td>1</td><td>tax record count, declared income mean/max/sum</td></tr>
+        <tr><td>derived</td><td>–</td><td><strong>thin_file</strong>, has_bureau_summary, has_prior_app, external_coverage, annuity / income, credit / income, tax income / stated income</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===================================================== MODELS -->
+  <h2 id="models">5. Models</h2>
+  <p>Each model is wrapped in <code>PDModel</code> (<code>models.py</code>): preprocessing and estimator live in one saved object,
+    and <code>predict_pd()</code> always takes the raw feature table.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Model</th><th>Preprocessing</th><th>Defaults</th><th>Optuna searches</th></tr></thead>
+      <tbody>
+        <tr><td>Logistic Regression</td><td>clip at 0.1% / 99.9% (learned on train), median impute + missing flags, signed log1p, StandardScaler, one-hot categories</td><td>C = 1, L2</td><td>C, L1 / L2, class_weight</td></tr>
+        <tr><td>Random Forest</td><td>numbers as-is (NaN supported), ordinal-encoded categories</td><td>200 trees, depth 14, min leaf 50, 30% bootstrap</td><td>trees, depth, min leaf</td></tr>
+        <tr><td>LightGBM</td><td>none: native missing values and categories</td><td>lr 0.05, 63 leaves, early stopping (100 rounds) on model-validation AUC</td><td>leaves, learning rate, min child samples, column sample</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption" style="margin-top:8px">Optuna (TPE sampler) runs on a 25% stratified sample with one declared metric, model-validation AUC (weeks 80–85).
+    <code>scale_pos_weight</code> is not tuned: it barely changes AUC but makes every PD too high, which breaks the 20% decision rule.</p>
+
+  <h3>Time split</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Weeks</th><th class="num">Loans</th><th>Used for</th></tr></thead>
+      <tbody>
+        <tr><td>0–79</td><td class="num">869,559</td><td>fit the model</td></tr>
+        <tr><td>80–85</td><td class="num">64,824</td><td>model validation: early stopping, Optuna tuning</td></tr>
+        <tr><td>86–91</td><td class="num">65,617</td><td>policy validation: calibration, thresholds, reported validation metrics</td></tr>
+        <tr><td>92–107 (test file)</td><td class="num">200,000</td><td>final score, once, against <code>solution.csv</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="caption" style="margin-top:8px">Why not stratified K-fold (slide 13)? The test set is later in time and risk drifts, so a random K-fold would mix
+    future weeks into training and over-state performance. A time-ordered holdout copies the real out-of-time test.</p>
+
+  <!-- ===================================================== POLICY -->
+  <h2 id="policy">6. Decision policy</h2>
+  <div class="card">
+    <h3 style="margin-top:0">Cost model → approval rule</h3>
+    <p>Repaid loan <strong>+$2,000</strong> · defaulted loan <strong>−$8,000</strong> · denied applicant <strong>$0</strong></p>
+    <div class="formula">Expected value of approving = (1 − PD) × 2,000 − PD × 8,000<br>Positive only when PD &lt; 2,000 / (2,000 + 8,000) = <strong>20%</strong></div>
+
+    <h3>Inclusion gap</h3>
+    <div class="formula">gap = approval rate of established good payers − approval rate of thin-file good payers   (percentage points)</div>
+
+    <h3>Inclusive Profit Score</h3>
+    <div class="formula">score = profit − penalty × |gap| × (applicants / 100,000)<br>only if default rate among approved loans ≤ ceiling</div>
+    <p class="caption">Defaults: penalty $100,000 per gap point per 100k applicants, ceiling 12%.</p>
+  </div>
+
+  <h3>Why the baseline is unfair</h3>
+  <p>The thin-file default rate falls from about 33% in week 0 to about 19% by week 91, while established stays near 16%.
+    Test weeks come later, so on test the model predicts 25.9% PD for thin-file applicants whose real default rate is 17.8%.
+    A flat 20% cut-off then denies many thin-file applicants who would repay.</p>
+
+  <h3>The second look</h3>
+  <ol class="steps">
+    <li><strong>Segment-aware calibration.</strong> Fit Platt scaling (or isotonic regression) separately for thin-file and established on the policy-validation weeks 86–91, which the model never saw.</li>
+    <li><strong>Drift correction.</strong> On weeks 0–85, fit a straight line to each segment's weekly default rate in log-odds (thin-file ≈ −0.0084 per week, established ≈ 0). Move each calibrated PD along that line from the policy-validation midpoint to the applicant's own week. Thin-file mean PD on test becomes 18.0% (actual 17.8%).</li>
+    <li><strong>Segment-aware thresholds.</strong> Try every pair of thresholds from 5% to 50% in 0.5% steps on weeks 86–91, and keep the pair with the best Inclusive Profit Score. Result for the best model: established &lt; 17.5%, thin-file &lt; 24.5%.</li>
+  </ol>
+
+  <!-- ===================================================== API -->
+  <h2 id="api">7. REST API</h2>
+  <p>Interactive docs at <code>http://localhost:8000/docs</code>.</p>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Method</th><th>Path</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>GET</td><td><code>/api/health</code></td><td>Data found? Features built? Cost model</td></tr>
+        <tr><td>POST</td><td><code>/api/features/build</code></td><td>Rebuild feature tables (background job)</td></tr>
+        <tr><td>GET</td><td><code>/api/eda/overview</code></td><td>Dataset summary</td></tr>
+        <tr><td>GET</td><td><code>/api/eda/features</code> · <code>/api/eda/feature/{name}</code></td><td>Feature list · default rate by bin per segment</td></tr>
+        <tr><td>GET</td><td><code>/api/models</code></td><td>Model types and default hyperparameters</td></tr>
+        <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>val_start_week</code>, <code>tune_trials</code>, <code>name</code></td></tr>
+        <tr><td>GET</td><td><code>/api/jobs</code> · <code>/api/jobs/{id}</code></td><td>Job status, progress, logs</td></tr>
+        <tr><td>GET / DELETE</td><td><code>/api/runs</code> · <code>/api/runs/{id}</code></td><td>Trained runs and metrics · delete a run</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get or re-run policy analysis: <code>calibration</code>, <code>per_segment</code>, <code>drift</code>, <code>penalty</code>, <code>ceiling</code>, <code>thresholds</code></td></tr>
+        <tr><td>GET</td><td><code>/api/insights/raw</code> · <code>/api/runs/{id}/insights</code></td><td>Raw-data walkthrough · model walkthrough for one run (validation weeks only)</td></tr>
+        <tr><td>GET</td><td><code>/api/applicants/random</code></td><td>10 random test applicants</td></tr>
+        <tr><td>POST</td><td><code>/api/runs/{id}/score</code></td><td>Score one applicant: <code>case_id</code>, <code>changes</code></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===================================================== RUN -->
+  <h2 id="run">8. How to run</h2>
+  <pre><code># Backend
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+scripts/fix_lightgbm_macos.sh                 # macOS without Homebrew libomp only
+export SLL_DATA_DIR="/path/to/synth_home_credit"   # only if it is not in data/synth_home_credit
+.venv/bin/uvicorn app.main:app --port 8000 --reload
+
+# Frontend (second terminal)
+cd frontend
+npm install
+npm run dev                                   # http://localhost:5173
+
+# Or build the UI once and open http://localhost:8000
+npm run build
+
+# Train without the UI
+.venv/bin/python -m app.cli --model lightgbm --trials 20
+
+# Regenerate the data dictionary after changing features.py
+.venv/bin/python scripts/make_data_dictionary.py
+
+# Rebuild and execute the notebook from its source (notebooks/build_notebook.py)
+cd ../notebooks && ../backend/.venv/bin/python build_notebook.py --run</code></pre>
+  <p class="caption">The first request builds the feature tables (about 20 seconds) and caches them in <code>backend/artifacts/features/</code>.</p>
+
+</main>
+</body>
+</html>
