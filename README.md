@@ -14,6 +14,7 @@ Break Through Tech AI Studio · American Express · Fall 2026
 | Jaahnvi Toolsidas   | @jtoolsidas        | Business understanding (#2), technical report                             |
 | Krish Almeida       | @ka250-tech        | EDA & predictive signals (#7), model selection and tuning                 |
 | Aninda Saprotiv Roy | @AnindaSaprotivRoy | EDA & predictive signals (#7), model evaluation and fairness analysis     |
+| Edem Wordi          | @Edem-m            | ML algorithms exploration (#11), thin-file second look (#13)              |
 
 **Challenge Advisor:** Thangavel Subramaniam · **AI Studio Coach:** Swagath Babu
 
