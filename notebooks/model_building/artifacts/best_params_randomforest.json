@@ -1,0 +1,28 @@
+{
+  "split": {
+    "train_weeks": "0-67",
+    "tune_weeks": "68-79",
+    "valid_weeks": "80-91",
+    "final_fit_weeks": "0-79"
+  },
+  "selection": "lowest tune LogLoss; ties within 0.0003 broken by largest min_samples_leaf",
+  "randomforest": {
+    "params": {
+      "min_samples_leaf": 258,
+      "max_features": 0.3,
+      "max_depth": 14,
+      "max_samples": 0.35
+    },
+    "trees": 200,
+    "search_trees": 60,
+    "n_trials": 6
+  },
+  "recency_half_life_weeks": "13",
+  "input_files": "model_ready_{fit,valid}.parquet (notebook 05: imputed, scaled, one-hot)",
+  "excluded_from_features": [
+    "case_id",
+    "target",
+    "WEEK_NUM",
+    "thin_file"
+  ]
+}
