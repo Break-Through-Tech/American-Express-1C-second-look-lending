@@ -15,7 +15,7 @@ PYTHON=$(command -v python3 || command -v python || true)
 echo "Using $("$PYTHON" --version 2>&1)"
 
 say "Checking Node.js (18 or newer)"
-command -v node >/dev/null || fail "Node.js not found. Install the LTS version from https://nodejs.org (or: brew install node)."
+command -v node >/dev/null || fail "Node.js not found. Install the LTS version from https://nodejs.org (or: brew install node), then open a new Terminal."
 node -e 'process.exit(parseInt(process.versions.node) >= 18 ? 0 : 1)' || fail "Node.js 18+ is needed; found $(node --version)."
 echo "Using Node $(node --version)"
 
@@ -33,13 +33,12 @@ say "Installing and building the frontend"
 (cd frontend && npm install --no-fund --no-audit && npm run build)
 
 say "Checking the dataset"
-DATA_DIR="${SLL_DATA_DIR:-data/synth_home_credit}"
+DATA_DIR="data/synth_home_credit"
 if [[ -d "$DATA_DIR/csv_files" ]]; then
   echo "Found the dataset in $DATA_DIR"
 else
   echo "Dataset not found in $DATA_DIR."
-  echo "Put the synth_home_credit folder (with csv_files/ and solution.csv) at data/synth_home_credit,"
-  echo "or set SLL_DATA_DIR=/path/to/synth_home_credit before starting."
+  echo "Put the synth_home_credit folder (with csv_files/ and solution.csv inside) at data/synth_home_credit."
 fi
 
 say "Done. Start the app with ./start.sh, then open http://localhost:8000"

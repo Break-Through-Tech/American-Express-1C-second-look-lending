@@ -24,7 +24,8 @@ echo.
 echo ==^> Checking Node.js (18 or newer)
 where node >nul 2>nul
 if errorlevel 1 (
-  echo Node.js not found. Install the LTS version from https://nodejs.org and open a new Command Prompt.
+  echo Node.js not found. Install the LTS version from https://nodejs.org
+  echo ^(or run: winget install OpenJS.NodeJS.LTS^), then open a new Command Prompt.
   goto :failed
 )
 node -e "process.exit(parseInt(process.versions.node) >= 18 ? 0 : 1)"
@@ -60,14 +61,12 @@ popd
 
 echo.
 echo ==^> Checking the dataset
-set "DATA_DIR=%SLL_DATA_DIR%"
-if not defined DATA_DIR set "DATA_DIR=data\synth_home_credit"
+set "DATA_DIR=data\synth_home_credit"
 if exist "%DATA_DIR%\csv_files" (
   echo Found the dataset in %DATA_DIR%
 ) else (
   echo Dataset not found in %DATA_DIR%.
-  echo Put the synth_home_credit folder ^(with csv_files and solution.csv^) at data\synth_home_credit,
-  echo or run:  set SLL_DATA_DIR=C:\path\to\synth_home_credit   before starting.
+  echo Put the synth_home_credit folder ^(with csv_files and solution.csv inside^) at data\synth_home_credit.
 )
 
 echo.

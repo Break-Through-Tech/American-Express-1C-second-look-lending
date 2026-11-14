@@ -4,7 +4,8 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_DIR = BACKEND_DIR.parent
 
-# The dataset folder (csv_files/ and solution.csv); defaults to data/synth_home_credit in the repo
+# The dataset folder (csv_files/ and solution.csv): data/synth_home_credit in the repo.
+# SLL_DATA_DIR is only set by the notebook on Colab, where the data lives in Google Drive.
 DATA_DIR = Path(os.environ.get("SLL_DATA_DIR", REPO_DIR / "data" / "synth_home_credit"))
 CSV_DIR = DATA_DIR / "csv_files"
 SOLUTION_CSV = DATA_DIR / "solution.csv"

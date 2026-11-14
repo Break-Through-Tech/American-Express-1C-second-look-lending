@@ -309,8 +309,7 @@ python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 scripts/fix_lightgbm_macos.sh          # macOS without Homebrew libomp only
 
-# the dataset goes in data/synth_home_credit (or point to it elsewhere)
-export SLL_DATA_DIR="/path/to/synth_home_credit"
+# the dataset goes in data/synth_home_credit (the app reads it from there)
 
 .venv/bin/uvicorn app.main:app --port 8000 --reload
 

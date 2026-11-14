@@ -573,7 +573,6 @@ cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 scripts/fix_lightgbm_macos.sh                 # macOS without Homebrew libomp only
-export SLL_DATA_DIR="/path/to/synth_home_credit"   # only if it is not in data/synth_home_credit
 .venv/bin/uvicorn app.main:app --port 8000 --reload
 
 # Frontend (second terminal)

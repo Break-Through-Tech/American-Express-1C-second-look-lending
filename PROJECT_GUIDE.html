@@ -135,7 +135,7 @@
     <p class="lead">Predict each applicant's probability of default, turn it into an approve / deny decision that makes money,
       and give applicants with little credit history a fair second look.</p>
     <p>This guide is for anyone joining the project: what it does, how it is built, how to run it, how to use every page,
-      and where to start reading the code.</p>
+      and where to start reading the code. A Markdown copy for GitHub is in <code>PROJECT_GUIDE.md</code>.</p>
 
     <!-- 1 -->
     <h2 id="overview">1. What this project is</h2>
@@ -173,6 +173,9 @@
     <p style="margin-top:12px">Every model earns <strong>more</strong> and becomes <strong>fairer</strong> with the second-look
       policy. Of thin-file applicants who repaid, 80.6% are approved instead of 41.2%. Most of the gain comes from
       calibration: thin-file PDs go from 25.9% (raw) to 18.0%, against a real default rate of 17.8%.</p>
+    <div class="note">These numbers are for Second Look deciding <strong>every</strong> application. In the app's pipeline
+      Second Look only looks again at the primary model's declines, which gives <strong>$147.7M → $154.0M</strong> and a gap
+      of <strong>36.9 → −2.5 pts</strong>.</div>
 
     <!-- 3 -->
     <h2 id="architecture">3. Architecture</h2>
@@ -366,7 +369,26 @@ flowchart LR
     <!-- 7 -->
     <h2 id="setup">7. Setup guide</h2>
     <p><strong>You need:</strong> Python 3.9+, Node.js 18+, git, and the dataset folder <code>synth_home_credit</code>
-      (containing <code>csv_files/</code> and <code>solution.csv</code>). No GPU, no accounts.</p>
+      (containing <code>csv_files/</code> and <code>solution.csv</code>). No GPU, no accounts. Python comes from
+      <a href="https://www.python.org/downloads/">python.org</a> (on Windows tick <em>Add python.exe to PATH</em>).</p>
+    <h3>Install Node.js (once)</h3>
+    <p>Node.js runs the web app's build tools; <code>npm</code> comes with it. Install the <strong>LTS</strong> version (18 or newer).</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>System</th><th>Easiest way</th><th>Or from the command line</th></tr></thead>
+        <tbody>
+          <tr><td><strong>macOS</strong></td><td>Download the macOS installer (<code>.pkg</code>) from <a href="https://nodejs.org">nodejs.org</a> and run it</td><td><code>brew install node</code> (needs <a href="https://brew.sh">Homebrew</a>)</td></tr>
+          <tr><td><strong>Windows</strong></td><td>Download the Windows installer (<code>.msi</code>) from <a href="https://nodejs.org">nodejs.org</a> and run it, keeping <em>Add to PATH</em> ticked</td><td><code>winget install OpenJS.NodeJS.LTS</code></td></tr>
+          <tr><td><strong>Linux</strong></td><td>Your package manager (e.g. <code>sudo apt install nodejs npm</code>), if it offers 18+</td><td><a href="https://github.com/nvm-sh/nvm">nvm</a>: <code>nvm install --lts</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>Then <strong>open a new Terminal / Command Prompt</strong> (so it finds Node) and check:</p>
+    <pre><code>node --version    # v18 or newer
+npm --version</code></pre>
+    <p>No admin rights on your Mac? Download the macOS <em>binary</em> (<code>.tar.gz</code>) from nodejs.org, unpack it into
+      your home folder (for example <code>~/.local/node</code>), and add <code>export PATH="$HOME/.local/node/bin:$PATH"</code>
+      to <code>~/.zshrc</code>.</p>
     <div class="tip"><strong>Quick start.</strong> After steps 1 and 2 below, one script does the rest.
       <strong>macOS / Linux:</strong> <code>./setup.sh</code> once, then <code>./start.sh</code>.
       <strong>Windows:</strong> <code>setup.bat</code> once, then <code>start.bat</code> (double-click or Command Prompt).
@@ -379,9 +401,9 @@ flowchart LR
         <pre><code>git clone https://github.com/Break-Through-Tech/American-Express-1C-second-look-lending.git
 cd American-Express-1C-second-look-lending</code></pre></li>
       <li><strong>Add the dataset</strong>
-        <p>Put (or unzip) it at <code>data/synth_home_credit/</code>. That folder is git-ignored, so the data is never
-          committed. If you keep it elsewhere, point to it instead:</p>
-        <pre><code>export SLL_DATA_DIR=/path/to/synth_home_credit</code></pre></li>
+        <p>Put (or unzip) it at <code>data/synth_home_credit/</code>, so that <code>data/synth_home_credit/csv_files/</code>
+          exists. The app reads it from there; there is nothing to configure. The folder is git-ignored, so the data is
+          never committed.</p></li>
       <li><strong>Install and start the backend</strong>
         <pre><code>cd backend
 python3 -m venv .venv
@@ -544,7 +566,7 @@ npm run dev                          # open http://localhost:5173</code></pre>
         <thead><tr><th>Problem</th><th>Fix</th></tr></thead>
         <tbody>
           <tr><td><code>Library not loaded: libomp.dylib</code> (macOS)</td><td>Run <code>backend/scripts/fix_lightgbm_macos.sh</code>, or <code>brew install libomp</code>.</td></tr>
-          <tr><td><code>"data_found": false</code></td><td>Put the dataset in <code>data/synth_home_credit</code> or set <code>SLL_DATA_DIR</code>, then restart the backend.</td></tr>
+          <tr><td><code>"data_found": false</code></td><td>Put the dataset in <code>data/synth_home_credit</code> (with <code>csv_files/</code> inside), then restart the backend.</td></tr>
           <tr><td>Port 8000 or 5173 already in use</td><td>Stop the old server, or start with another <code>--port</code> (update <code>vite.config.js</code> to match).</td></tr>
           <tr><td>"Run … not found" on a page</td><td>The run was deleted; pick another run, or train a new one.</td></tr>
           <tr><td>Feature changes don't show up</td><td>Delete <code>backend/artifacts/features/</code> (or call <code>POST /api/features/build</code>) and retrain.</td></tr>

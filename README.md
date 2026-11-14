@@ -5,8 +5,9 @@ approve / deny decision that makes money, and give applicants with little credit
 
 Break Through Tech AI · AI Studio Challenge 2026 (Aug – Dec 2026).
 
-> 📘 New to the project? Open **[PROJECT_GUIDE.html](PROJECT_GUIDE.html)** in a browser: it has the architecture and
-> training-flow diagrams, a setup guide, a tour of every page and a code walkthrough.
+> 📘 New to the project? Read **[PROJECT_GUIDE.md](PROJECT_GUIDE.md)** right here on GitHub, or open
+> **[PROJECT_GUIDE.html](PROJECT_GUIDE.html)** in a browser. Both have the architecture and training-flow diagrams, a
+> setup guide, a tour of every page and a code walkthrough.
 
 ---
 
@@ -43,7 +44,28 @@ Break Through Tech AI · AI Studio Challenge 2026 (Aug – Dec 2026).
 ## 👩🏽‍💻 **Setup and Installation**
 
 **You need:** Python 3.9+, Node.js 18+, and the synthetic dataset folder (`synth_home_credit`, with `csv_files/` and
-`solution.csv` inside). No GPU and no accounts are needed.
+`solution.csv` inside). No GPU and no accounts are needed. Python comes from
+[python.org](https://www.python.org/downloads/) (on Windows tick *Add python.exe to PATH*); Node.js is below.
+
+### Install Node.js (once)
+
+Node.js runs the web app's build tools; `npm` comes with it. Install the **LTS** version (18 or newer).
+
+| System | Easiest way | Or from the command line |
+|---|---|---|
+| **macOS** | Download the macOS installer (`.pkg`) from [nodejs.org](https://nodejs.org) and run it | `brew install node` (needs [Homebrew](https://brew.sh)) |
+| **Windows** | Download the Windows installer (`.msi`) from [nodejs.org](https://nodejs.org) and run it, keeping *Add to PATH* ticked | `winget install OpenJS.NodeJS.LTS` |
+| **Linux** | Your package manager (e.g. `sudo apt install nodejs npm`), if it offers 18+ | [nvm](https://github.com/nvm-sh/nvm): `nvm install --lts` |
+
+Then **open a new Terminal / Command Prompt** (so it finds Node) and check:
+
+```bash
+node --version    # v18 or newer
+npm --version
+```
+
+No admin rights on your Mac? Download the macOS *binary* (`.tar.gz`) from nodejs.org, unpack it into your home
+folder (for example `~/.local/node`), and add `export PATH="$HOME/.local/node/bin:$PATH"` to `~/.zshrc`.
 
 ### Quick start (recommended)
 
@@ -59,8 +81,8 @@ They are safe to run again.
 
 Then open **http://localhost:8000**. On macOS, `setup.sh` also runs `backend/scripts/fix_lightgbm_macos.sh` when
 Homebrew's `libomp` is missing. On Windows, LightGBM needs the *Microsoft Visual C++ Redistributable (x64)*;
-`setup.bat` tells you if it is missing. To keep the dataset elsewhere, set `SLL_DATA_DIR` before starting
-(`export SLL_DATA_DIR=/path/...` on macOS / Linux, `set SLL_DATA_DIR=C:\path\...` on Windows).
+`setup.bat` tells you if it is missing. The app always reads the dataset from `data/synth_home_credit`, so there is
+nothing to configure.
 
 ### Manual setup
 
@@ -70,7 +92,6 @@ git clone https://github.com/Break-Through-Tech/American-Express-1C-second-look-
 cd American-Express-1C-second-look-lending
 
 # 2. Put the dataset in data/synth_home_credit (git-ignored; never commit data)
-#    or keep it anywhere and run:  export SLL_DATA_DIR=/path/to/synth_home_credit
 
 # 3. Backend
 cd backend
@@ -272,5 +293,5 @@ Thanks to our Challenge Advisor, AI Studio coach and the Break Through Tech AI t
 | `notebooks/second_look_lending.ipynb` | Reproducible EDA + models + policy notebook (built from `build_notebook.py`) |
 | `doc/ARCHITECTURE.md`, `doc/architecture.html` | Architecture and model design |
 | `doc/DATA_DICTIONARY.md` | Every feature and raw column |
-| `PROJECT_GUIDE.html` | Diagrams, setup, how to use, code walkthrough for new team members |
+| `PROJECT_GUIDE.html`, `PROJECT_GUIDE.md` | Diagrams, setup, how to use, code walkthrough for new team members (HTML with dark mode, or Markdown that renders on GitHub) |
 | `data/` | Where the dataset goes (git-ignored) |

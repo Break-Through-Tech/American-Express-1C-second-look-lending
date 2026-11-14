@@ -163,7 +163,15 @@ export default function Help() {
 
       <section id="setup" className="card">
         <h2>Setup & links</h2>
-        <p>You need Python 3.9+, Node.js 18+ and the dataset folder <code>synth_home_credit</code> in <code>data/</code>. Then, from the project folder:</p>
+        <p>You need Python 3.9+, Node.js 18+ and the dataset folder <code>synth_home_credit</code> in <code>data/</code>.</p>
+        <h3>Install Node.js (once)</h3>
+        <ul className="takeaways" style={{ marginBottom: 10 }}>
+          <li><strong>macOS:</strong> run the <code>.pkg</code> installer from <a href="https://nodejs.org" target="_blank" rel="noreferrer">nodejs.org</a> (LTS), or <code>brew install node</code>.</li>
+          <li><strong>Windows:</strong> run the <code>.msi</code> installer from <a href="https://nodejs.org" target="_blank" rel="noreferrer">nodejs.org</a> (LTS) with <em>Add to PATH</em> ticked, or <code>winget install OpenJS.NodeJS.LTS</code>.</li>
+          <li><strong>Linux:</strong> your package manager, or <code>nvm install --lts</code>.</li>
+          <li>Open a new Terminal / Command Prompt and check <code>node --version</code> shows v18 or newer.</li>
+        </ul>
+        <p>Then, from the project folder:</p>
         <div className="grid grid-2">
           <div>
             <h3>macOS / Linux (Terminal)</h3>
