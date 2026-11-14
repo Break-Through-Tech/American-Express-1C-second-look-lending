@@ -1,39 +1,61 @@
-import { NavLink, Route, Routes } from 'react-router-dom'
-import Overview from './pages/Overview.jsx'
-import Train from './pages/Train.jsx'
-import Models from './pages/Models.jsx'
-import PolicyLab from './pages/PolicyLab.jsx'
-import Applicant from './pages/Applicant.jsx'
-import Insights from './pages/Insights.jsx'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { SimpleLayout, WorkspaceLayout } from './components/Layout.jsx'
+import Home from './pages/Home.jsx'
+import Help from './pages/Help.jsx'
+import Apply from './pages/applicant/Apply.jsx'
+import Portal from './pages/applicant/Portal.jsx'
+import Decision from './pages/applicant/Decision.jsx'
+import Dashboard from './pages/business/Dashboard.jsx'
+import PolicyLab from './pages/business/PolicyLab.jsx'
+import Statistics from './pages/business/Statistics.jsx'
+import WorkQueue from './pages/business/WorkQueue.jsx'
+import ReviewCase from './pages/business/ReviewCase.jsx'
+import Overview from './pages/tech/Overview.jsx'
+import Insights from './pages/tech/Insights.jsx'
+import Train from './pages/tech/Train.jsx'
+import Models from './pages/tech/Models.jsx'
 
-const pages = [
-  { path: '/', label: 'Overview & EDA', element: <Overview /> },
-  { path: '/insights', label: 'Insights: data & model', element: <Insights /> },
-  { path: '/train', label: 'Train models', element: <Train /> },
-  { path: '/models', label: 'Compare models', element: <Models /> },
-  { path: '/policy', label: 'Policy lab', element: <PolicyLab /> },
-  { path: '/applicant', label: 'Score applicant', element: <Applicant /> },
-]
+// Old links (before the three workspaces) still work, query string included
+function Moved({ to }) {
+  const { search } = useLocation()
+  return <Navigate to={to + search} replace />
+}
 
 export default function App() {
   return (
-    <div className="layout">
-      <nav className="sidebar">
-        <div className="brand">Second-Look Lending</div>
-        <div className="brand-sub">Profit-aware, inclusive credit decisions</div>
-        {pages.map((page) => (
-          <NavLink key={page.path} to={page.path} end>
-            {page.label}
-          </NavLink>
-        ))}
-      </nav>
-      <main className="content">
-        <Routes>
-          {pages.map((page) => (
-            <Route key={page.path} path={page.path} element={page.element} />
-          ))}
-        </Routes>
-      </main>
-    </div>
+    <Routes>
+      <Route element={<SimpleLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/apply" element={<Apply />} />
+        <Route path="/apply/status" element={<Portal />} />
+        <Route path="/apply/:caseId" element={<Decision />} />
+      </Route>
+      <Route element={<SimpleLayout wide />}>
+        <Route path="/help" element={<Help />} />
+      </Route>
+
+      <Route element={<WorkspaceLayout workspaceId="business" subtitle="Profit, fairness and the lending policy" />}>
+        <Route path="/business" element={<Dashboard />} />
+        <Route path="/business/policy" element={<PolicyLab />} />
+        <Route path="/business/statistics" element={<Statistics />} />
+        <Route path="/business/pipeline" element={<WorkQueue />} />
+        <Route path="/business/review/:caseId" element={<ReviewCase />} />
+      </Route>
+
+      <Route element={<WorkspaceLayout workspaceId="tech" subtitle="Data, training and model quality" />}>
+        <Route path="/tech" element={<Overview />} />
+        <Route path="/tech/insights" element={<Insights />} />
+        <Route path="/tech/train" element={<Train />} />
+        <Route path="/tech/models" element={<Models />} />
+      </Route>
+
+      <Route path="/insights" element={<Moved to="/tech/insights" />} />
+      <Route path="/train" element={<Moved to="/tech/train" />} />
+      <Route path="/models" element={<Moved to="/tech/models" />} />
+      <Route path="/policy" element={<Moved to="/business/policy" />} />
+      <Route path="/applicant" element={<Moved to="/business/pipeline" />} />
+      <Route path="/business/cases" element={<Moved to="/business/pipeline" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }

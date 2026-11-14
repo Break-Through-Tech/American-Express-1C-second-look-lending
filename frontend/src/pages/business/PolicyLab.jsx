@@ -2,53 +2,54 @@ import { useEffect, useState } from 'react'
 import {
   Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts'
-import { api } from '../api.js'
-import { ChartTooltip, ErrorBox, Legend, NoRuns, RunPicker } from '../components/ui.jsx'
-import { useRuns } from '../components/useRuns.js'
-import { money, percent, points } from '../format.js'
+import { api } from '../../api.js'
+import { ChartTooltip, ErrorBox, Legend, NoRuns } from '../../components/ui.jsx'
+import { useModelRoles } from '../../components/useRuns.js'
+import { money, percent, points } from '../../format.js'
 
 const POLICY_NAMES = {
-  approve_all: 'Approve everyone (naïve)',
-  baseline: 'Baseline: raw PD < 20%',
-  calibrated_flat: 'Calibrated PD < 20%',
-  second_look: 'Second-look policy',
+  approve_all: 'Approve everyone',
+  baseline: 'Old rule: risk < 20%',
+  calibrated_flat: 'Adjusted risk < 20%',
+  second_look: 'Second Look',
 }
 
 const axisProps = { tick: { fontSize: 12, fill: 'var(--text-3)' }, stroke: 'var(--border)' }
 
 export default function PolicyLab() {
-  const { runs, selected, select, error: runsError } = useRuns()
+  // The policy belongs to the second-look model
+  const { roles, secondLookRun: run, runs, error: runError } = useModelRoles()
+  const runId = roles?.second_look
   const [options, setOptions] = useState(null)
   const [result, setResult] = useState(null)
-  const [busy, setBusy] = useState(false)
+  const [busy, setBusy] = useState(null)  // 'preview' or 'publish' while a request runs
   const [error, setError] = useState(null)
 
-  // Load the saved analysis whenever the run changes
+  // Start from the published policy of the second-look model
   useEffect(() => {
-    if (!selected) return
-    setResult(null)
-    setError(null)
-    api.policy(selected).then((r) => {
+    if (!runId) return
+    api.policy(runId).then((r) => {
       setResult(r)
       setOptions({ ...r.options, manual: false })
     }).catch(setError)
-  }, [selected])
+  }, [runId])
 
-  const runAnalysis = async () => {
-    setBusy(true)
+  const submit = async (save) => {
+    if (save && !window.confirm('Publish this policy? It will decide every new application from now on.')) return
+    setBusy(save ? 'publish' : 'preview')
     setError(null)
     try {
       const body = { ...options, thresholds: options.manual ? options.thresholds : null }
-      const r = await api.updatePolicy(selected, body)
+      const r = await api.updatePolicy(runId, body, save)
       setResult(r)
       setOptions({ ...r.options, manual: options.manual })
     } catch (e) {
       setError(e)
     }
-    setBusy(false)
+    setBusy(null)
   }
 
-  if (runsError) return <ErrorBox error={runsError} />
+  if (runError) return <ErrorBox error={runError} />
   if (!runs) return <div className="muted">Loading…</div>
 
   return (
@@ -56,23 +57,28 @@ export default function PolicyLab() {
       <div className="page-head">
         <h1>Policy lab</h1>
         <p>
-          Turn PD into approve / deny. Repaid loan <strong>+$2,000</strong>, default <strong>−$8,000</strong>, denied $0
-          → approve if PD &lt; 20%. The second-look policy calibrates PD per segment, corrects for drift, and tunes one
-          threshold per segment on validation — then is scored once on the out-of-time test set.
+          Decide how risk scores become approve / deny. A repaid loan earns <strong>+$2,000</strong>, a default costs
+          <strong> −$8,000</strong>, so the old rule approves anyone below 20% risk. Second Look adjusts scores for first-time
+          borrowers and uses one cut-off per group. <strong>Preview</strong> changes freely — nothing goes live until you
+          <strong> Publish</strong>.
         </p>
       </div>
-      {runs.length === 0 ? <NoRuns /> : (
+      {!runId ? <NoRuns /> : (
         <>
           <div className="card">
             <div className="row" style={{ marginBottom: 12 }}>
-              <label className="field" style={{ minWidth: 280 }}>
-                Model run
-                <RunPicker runs={runs} value={selected} onChange={select} />
-              </label>
+              <span className="small muted">Second-look model:</span>
+              <strong>{run?.name || runId}</strong>
+              <span className="small muted">(chosen by the tech team) · this policy decides applications the primary model declined</span>
             </div>
-            {options && <Controls options={options} setOptions={setOptions} onRun={runAnalysis} busy={busy} />}
+            {options && <Controls options={options} setOptions={setOptions} onSubmit={submit} busy={busy} />}
           </div>
           <ErrorBox error={error} />
+          {result && (
+            result.published === false
+              ? <div className="banner warn"><strong>Preview — not published.</strong> Live decisions still use the published policy. Publish to make this live.</div>
+              : <div className="banner good"><strong>Published policy.</strong> This is what decides applications right now.</div>
+          )}
           {result && <Results result={result} />}
         </>
       )}
@@ -80,7 +86,7 @@ export default function PolicyLab() {
   )
 }
 
-function Controls({ options, setOptions, onRun, busy }) {
+function Controls({ options, setOptions, onSubmit, busy }) {
   const set = (key, value) => setOptions({ ...options, [key]: value })
   const setThreshold = (segment, value) =>
     setOptions({ ...options, thresholds: { ...options.thresholds, [segment]: Number(value) } })
@@ -89,46 +95,49 @@ function Controls({ options, setOptions, onRun, busy }) {
     <>
       <div className="grid grid-4">
         <label className="field">
-          Calibration
+          Score adjustment (calibration)
           <select value={options.calibration} onChange={(e) => set('calibration', e.target.value)}>
-            <option value="none">None (raw PD)</option>
-            <option value="platt">Platt (logistic)</option>
+            <option value="none">None (raw model scores)</option>
+            <option value="platt">Platt (recommended)</option>
             <option value="isotonic">Isotonic</option>
           </select>
         </label>
         <label className="field">
-          Gap penalty ($ per point per 100k applicants)
+          Fairness penalty ($ per gap point, per 100k applicants)
           <input type="number" step={10000} min={0} value={options.penalty} onChange={(e) => set('penalty', Number(e.target.value))} />
         </label>
         <label className="field">
-          Default-rate ceiling (approved loans)
+          Highest allowed default rate of approved loans
           <input type="number" step={0.01} min={0.01} max={1} value={options.ceiling} onChange={(e) => set('ceiling', Number(e.target.value))} />
         </label>
         <div className="field" style={{ gap: 8, justifyContent: 'flex-end' }}>
-          <label className="check"><input type="checkbox" checked={options.per_segment} onChange={(e) => set('per_segment', e.target.checked)} /> Calibrate per segment</label>
-          <label className="check"><input type="checkbox" checked={options.drift} onChange={(e) => set('drift', e.target.checked)} /> Drift correction</label>
+          <label className="check"><input type="checkbox" checked={options.per_segment} onChange={(e) => set('per_segment', e.target.checked)} /> Adjust each group separately</label>
+          <label className="check"><input type="checkbox" checked={options.drift} onChange={(e) => set('drift', e.target.checked)} /> Correct for change over time</label>
         </div>
       </div>
 
       <div className="row" style={{ marginTop: 16 }}>
         <label className="check">
           <input type="checkbox" checked={options.manual} onChange={(e) => set('manual', e.target.checked)} />
-          Set thresholds by hand (otherwise they are optimized on validation)
+          Set the cut-offs by hand (otherwise the best ones are found on recent validation weeks)
         </label>
       </div>
       {options.manual && (
         <div className="grid grid-2" style={{ marginTop: 8 }}>
           <label className="field">
-            Established threshold: {percent(options.thresholds.established)}
+            Established cut-off: approve below {percent(options.thresholds.established)} risk
             <input type="range" min={0.05} max={0.5} step={0.005} value={options.thresholds.established} onChange={(e) => setThreshold('established', e.target.value)} />
           </label>
           <label className="field">
-            Thin-file threshold: {percent(options.thresholds.thin_file)}
+            First-time (thin-file) cut-off: approve below {percent(options.thresholds.thin_file)} risk
             <input type="range" min={0.05} max={0.5} step={0.005} value={options.thresholds.thin_file} onChange={(e) => setThreshold('thin_file', e.target.value)} />
           </label>
         </div>
       )}
-      <button style={{ marginTop: 14 }} onClick={onRun} disabled={busy}>{busy ? 'Running…' : 'Run policy analysis'}</button>
+      <div className="row" style={{ marginTop: 14 }}>
+        <button onClick={() => onSubmit(false)} disabled={busy !== null}>{busy === 'preview' ? 'Previewing…' : 'Preview'}</button>
+        <button className="secondary" onClick={() => onSubmit(true)} disabled={busy !== null}>{busy === 'publish' ? 'Publishing…' : 'Publish to live decisions'}</button>
+      </div>
     </>
   )
 }
@@ -146,13 +155,13 @@ function Results({ result }) {
           <h2 style={{ margin: 0 }}>Before / after</h2>
           <div className="spacer" />
           <div className="tabs">
-            <button className={split === 'validation' ? 'active' : ''} onClick={() => setSplit('validation')}>Validation</button>
-            <button className={split === 'test' ? 'active' : ''} onClick={() => setSplit('test')}>Test (final check)</button>
+            <button className={split === 'validation' ? 'active' : ''} onClick={() => setSplit('validation')}>Weeks used to choose cut-offs</button>
+            <button className={split === 'test' ? 'active' : ''} onClick={() => setSplit('test')}>Most recent weeks</button>
           </div>
         </div>
         <div className="compare">
-          <PolicyCard title="Baseline policy" subtitle="One flat threshold on raw PD (20%)" policy={base} />
-          <PolicyCard title="Second-look policy" subtitle={`Established < ${percent(second.thresholds.established)} · thin-file < ${percent(second.thresholds.thin_file)}`} policy={second} compareTo={base} highlight />
+          <PolicyCard title="Old rule" subtitle="Approve anyone whose model risk is below 20%" policy={base} />
+          <PolicyCard title="Second Look" subtitle={`Established below ${percent(second.thresholds.established)} · first-time below ${percent(second.thresholds.thin_file)} (adjusted risk)`} policy={second} compareTo={base} highlight />
         </div>
         <p className="card-note">
           Inclusion gap = approval rate among applicants who actually repaid: established minus thin-file.

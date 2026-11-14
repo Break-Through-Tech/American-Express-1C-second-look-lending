@@ -43,6 +43,32 @@ def list_runs():
     return runs
 
 
+MODEL_ROLES = ["primary", "second_look"]
+
+
+def get_model_roles():
+    """Which run plays each role; unset roles fall back to the best run on validation AUC."""
+    chosen = read_json(config.ARTIFACTS_DIR / "model_roles.json") or {}
+    runs = list_runs()
+    existing = {r["run_id"] for r in runs}
+    best = max(runs, key=lambda r: r["metrics"]["validation"]["all"]["auc"])["run_id"] if runs else None
+    return {role: chosen.get(role) if chosen.get(role) in existing else best for role in MODEL_ROLES}
+
+
+def set_model_role(role, run_id):
+    if role not in MODEL_ROLES:
+        raise ValueError(f"role must be one of {MODEL_ROLES}")
+    run_folder(run_id)  # raises KeyError if the run does not exist
+    chosen = read_json(config.ARTIFACTS_DIR / "model_roles.json") or {}
+    chosen[role] = run_id
+    save_json(config.ARTIFACTS_DIR / "model_roles.json", chosen)
+
+
+def get_production_run():
+    """The second-look model: the one the published policy, dashboard and case pages use."""
+    return get_model_roles()["second_look"]
+
+
 def get_run(run_id):
     return read_json(run_folder(run_id) / "info.json")
 

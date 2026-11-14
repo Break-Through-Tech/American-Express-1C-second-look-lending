@@ -6,7 +6,9 @@ async function request(method, path, body) {
   })
   const data = await response.json().catch(() => null)
   if (!response.ok) {
-    throw new Error(data?.detail || `Request failed: ${response.status}`)
+    // Form validation errors come back as a list; show the first one
+    const detail = Array.isArray(data?.detail) ? data.detail[0]?.msg : data?.detail
+    throw new Error(detail || `Request failed: ${response.status}`)
   }
   return data
 }
@@ -29,12 +31,32 @@ export const api = {
   deleteRun: (id) => request('DELETE', `/api/runs/${id}`),
 
   policy: (id) => request('GET', `/api/runs/${id}/policy`),
-  updatePolicy: (id, options) => request('POST', `/api/runs/${id}/policy`, options),
+  // save: false = preview only, true = publish to live decisions
+  updatePolicy: (id, options, save = false) => request('POST', `/api/runs/${id}/policy`, { ...options, save }),
 
   rawInsights: () => request('GET', '/api/insights/raw'),
   modelInsights: (id) => request('GET', `/api/runs/${id}/insights`),
   modelAlgorithm: (id) => request('GET', `/api/runs/${id}/algorithm`),
 
-  randomApplicants: () => request('GET', '/api/applicants/random'),
-  score: (id, caseId, changes) => request('POST', `/api/runs/${id}/score`, { case_id: caseId, changes }),
+  // Which run is the primary model and which is the second-look model
+  modelRoles: () => request('GET', '/api/model-roles'),
+  setModelRole: (role, runId) => request('PUT', '/api/model-roles', { role, run_id: runId }),
+  businessDashboard: () => request('GET', '/api/business/dashboard'),
+
+  // Decision pipeline: primary -> Second Look -> human review
+  workflowSettings: () => request('GET', '/api/workflow/settings'),
+  saveWorkflowSettings: (changes) => request('PUT', '/api/workflow/settings', changes),
+  workflowSummary: () => request('GET', '/api/workflow/summary'),
+  processWeek: (week) => request('POST', '/api/workflow/process', { week }),
+  sendToSecondLook: (caseIds = []) => request('POST', '/api/workflow/second-look', { case_ids: caseIds }),
+  workflowCases: (params) => request('GET', `/api/workflow/cases?${new URLSearchParams(params)}`),
+  workflowCase: (id) => request('GET', `/api/workflow/cases/${id}`),
+  rescoreCase: (id, changes) => request('POST', `/api/workflow/cases/${id}/rescore`, { changes }),
+  decideCase: (id, body) => request('POST', `/api/workflow/cases/${id}/decide`, body),
+  resetWorkflow: () => request('POST', '/api/workflow/reset', {}),
+
+  apply: (form) => request('POST', '/api/portal/apply', form),
+  portalShowcase: () => request('GET', '/api/portal/showcase'),
+  portalScore: (caseId, changes = {}) => request('POST', '/api/portal/score', { case_id: caseId, changes }),
+
 }

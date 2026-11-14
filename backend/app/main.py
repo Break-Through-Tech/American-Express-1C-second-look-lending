@@ -1,14 +1,16 @@
 """REST API for the Second-Look Lending app. Run: uvicorn app.main:app --reload"""
+from datetime import date
 from pathlib import Path
-from typing import Dict, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from app import algorithm, analysis, applicant, config, eda, features, insights, jobs, storage, training
+from app import (algorithm, analysis, applicant, business, config, eda, features, insights, jobs, scoring, storage,
+                 training, workflow)
 from app.models import DEFAULT_PARAMS, MODEL_NAMES
 from app.param_help import PARAM_HELP
 
@@ -33,11 +35,34 @@ class PolicyRequest(BaseModel):
     penalty: float = Field(100_000, ge=0)
     ceiling: Optional[float] = Field(0.12, gt=0, le=1)  # None = no ceiling
     thresholds: Optional[Dict[Literal["established", "thin_file"], float]] = None
+    save: bool = False  # False = preview only; True = publish (changes live decisions)
 
 
 class ScoreRequest(BaseModel):
     case_id: int
     changes: Dict[str, Optional[float]] = {}
+
+
+class ApplicationForm(BaseModel):
+    """What a person fills in on the online application. Name and email are never shown to the models."""
+    first_name: str = Field(min_length=1, max_length=60)
+    last_name: str = Field(min_length=1, max_length=60)
+    email: str = Field(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=120)
+    date_of_birth: date
+    loan_amount: float = Field(ge=1000, le=100_000)
+    term_months: Literal[6, 12, 18, 24, 36, 48]
+    purpose: Literal["home improvement", "car", "education", "medical", "debt consolidation", "other"]
+    employment: Literal["employed", "self-employed", "retired", "student", "not working"]
+    years_employed: float = Field(ge=0, le=50)
+    annual_income: float = Field(ge=0, le=1_000_000)
+    tax_declared_income: Optional[float] = Field(None, ge=0, le=1_000_000)
+    has_credit_history: bool
+    credit_rating: Optional[Literal["excellent", "very good", "good", "fair", "poor"]] = None
+    credit_accounts: int = Field(0, ge=0, le=8)
+    worst_days_late: int = Field(0, ge=0, le=90)
+    credit_checks_last_year: int = Field(0, ge=0, le=15)
+    previous_loans: int = Field(0, ge=0, le=4)
+    consent: Literal[True]  # the applicant must agree to the credit check
 
 
 def not_found(error):
@@ -159,11 +184,181 @@ def get_policy(run_id: str):
 @app.post("/api/runs/{run_id}/policy")
 def update_policy(run_id: str, request: PolicyRequest):
     try:
-        return analysis.run_policy_analysis(run_id, request.model_dump())
+        options = request.model_dump()
+        save = options.pop("save")
+        return analysis.run_policy_analysis(run_id, options, save=save)
     except KeyError as error:
         not_found(error)
     except ValueError as error:
         raise HTTPException(400, str(error))
+
+
+# Model roles: the primary model decides first, the second-look model reviews declines
+
+class RoleRequest(BaseModel):
+    role: Literal["primary", "second_look"]
+    run_id: str
+
+
+@app.get("/api/model-roles")
+def get_model_roles():
+    return storage.get_model_roles()
+
+
+@app.put("/api/model-roles")
+def set_model_role(request: RoleRequest):
+    try:
+        storage.set_model_role(request.role, request.run_id)
+        return storage.get_model_roles()
+    except KeyError as error:
+        not_found(error)
+
+
+# Decision pipeline: primary -> Second Look -> human review
+
+class WorkflowSettings(BaseModel):
+    mode: Optional[Literal["auto", "manual"]] = None
+    primary_cutoff: Optional[float] = Field(None, gt=0, lt=1)
+    review_band: Optional[float] = Field(None, ge=0, le=1)
+
+
+class ProcessRequest(BaseModel):
+    week: int = Field(..., ge=92, le=107)
+
+
+class SendRequest(BaseModel):
+    case_ids: List[int] = []  # empty = every waiting case
+
+
+class ChangesRequest(BaseModel):
+    changes: Dict[str, Optional[float]] = {}
+
+
+class DecisionRequest(BaseModel):
+    decision: Literal["approve", "decline"]
+    reason: str = ""
+    reviewer: str = "reviewer"
+    changes: Dict[str, Optional[float]] = {}
+
+
+def needs_model():
+    if not storage.get_production_run():
+        not_found("No trained model yet")
+
+
+@app.get("/api/workflow/settings")
+def workflow_settings():
+    return scoring.get_settings()
+
+
+@app.put("/api/workflow/settings")
+def update_workflow_settings(request: WorkflowSettings):
+    return scoring.save_settings({k: v for k, v in request.model_dump().items() if v is not None})
+
+
+@app.get("/api/workflow/summary")
+def workflow_summary():
+    needs_model()
+    return workflow.summary()
+
+
+@app.post("/api/workflow/process")
+def workflow_process(request: ProcessRequest):
+    needs_model()
+    return workflow.process_week(request.week)
+
+
+@app.post("/api/workflow/second-look")
+def workflow_send(request: SendRequest):
+    needs_model()
+    return workflow.send_to_second_look(request.case_ids or None)
+
+
+@app.get("/api/workflow/cases")
+def workflow_cases(status: Optional[str] = None, week: Optional[int] = None, thin_file: Optional[bool] = None,
+                   limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0)):
+    return workflow.list_cases(status, week, thin_file, limit, offset)
+
+
+@app.get("/api/workflow/cases/{case_id}")
+def workflow_case(case_id: int):
+    try:
+        return workflow.get_case(case_id)
+    except KeyError as error:
+        not_found(error)
+
+
+@app.post("/api/workflow/cases/{case_id}/rescore")
+def workflow_rescore(case_id: int, request: ChangesRequest):
+    try:
+        return workflow.rescore(case_id, request.changes)
+    except KeyError as error:
+        not_found(error)
+
+
+@app.post("/api/workflow/cases/{case_id}/decide")
+def workflow_decide(case_id: int, request: DecisionRequest):
+    try:
+        return workflow.decide(case_id, request.decision, request.reason, request.changes, request.reviewer)
+    except KeyError as error:
+        not_found(error)
+    except ValueError as error:
+        raise HTTPException(400, str(error))
+
+
+@app.post("/api/workflow/reset")
+def workflow_reset():
+    workflow.reset()
+    return {"reset": True}
+
+
+# Business dashboard
+
+@app.get("/api/business/dashboard")
+def business_dashboard():
+    run_id = storage.get_production_run()
+    if not run_id:
+        not_found("No trained model yet")
+    return business.dashboard(run_id)
+
+
+# Applicant portal (always uses the production model)
+
+@app.get("/api/portal/showcase")
+def portal_showcase():
+    run_id = storage.get_production_run()
+    if not run_id:
+        not_found("No trained model yet")
+    return applicant.showcase(run_id)
+
+
+@app.post("/api/portal/apply")
+def portal_apply(form: ApplicationForm):
+    if not storage.get_production_run():
+        not_found("No trained model yet")
+    age = (date.today() - form.date_of_birth).days / 365.25
+    if not 18 <= age <= 100:
+        raise HTTPException(status_code=422, detail="You must be at least 18 to apply")
+    if form.has_credit_history and (form.credit_accounts == 0 or not form.credit_rating):
+        raise HTTPException(status_code=422, detail="Tell us about your credit accounts and your credit score band")
+    return workflow.submit_application(form.model_dump(mode="json"))
+
+
+@app.post("/api/portal/score")
+def portal_score(request: ScoreRequest):
+    run_id = storage.get_production_run()
+    if not run_id:
+        not_found("No trained model yet")
+    try:
+        result = applicant.score(run_id, request.case_id, request.changes)
+        # Where the application really is, or would land with the what-if changes
+        if request.changes:
+            result["workflow"] = workflow.whatif(request.case_id, request.changes)
+        else:
+            result["workflow"] = workflow.applicant_status(request.case_id)
+        return result
+    except KeyError as error:
+        not_found(error)
 
 
 # Insights (learning page)
@@ -191,17 +386,10 @@ def model_algorithm(run_id: str):
 
 # Applicant
 
-@app.get("/api/applicants/random")
-def random_applicants():
-    return applicant.random_applicants()
-
-
-@app.post("/api/runs/{run_id}/score")
-def score_applicant(run_id: str, request: ScoreRequest):
-    try:
-        return applicant.score(run_id, request.case_id, request.changes)
-    except KeyError as error:
-        not_found(error)
+@app.get("/guide", include_in_schema=False)
+def project_guide():
+    # The full project guide (diagrams, setup, code walkthrough), linked from the Help page
+    return FileResponse(config.REPO_DIR / "PROJECT_GUIDE.html")
 
 
 # Serve the built React app too, so one server is enough

@@ -14,7 +14,8 @@ DEFAULT_OPTIONS = {
 }
 
 
-def run_policy_analysis(run_id, options):
+def run_policy_analysis(run_id, options, save=True):
+    """Score the policies; save=False is a preview that leaves the published policy alone."""
     options = {**DEFAULT_OPTIONS, **options}
     folder = storage.run_folder(run_id)
     val = storage.load_predictions(run_id, "val")
@@ -75,8 +76,10 @@ def run_policy_analysis(run_id, options):
             "second_look_score": second_look["inclusive_profit_score"],
         },
     }
-    storage.save_json(folder / "policy.json", result)
-    joblib.dump(calibrator, folder / "calibrator.joblib")
+    result["published"] = save
+    if save:
+        storage.save_json(folder / "policy.json", result)
+        joblib.dump(calibrator, folder / "calibrator.joblib")
     return result
 
 

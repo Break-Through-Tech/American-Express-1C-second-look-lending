@@ -20,12 +20,20 @@ Break Through Tech AI · AI Studio Challenge 2026 (Aug – Dec 2026).
 
 ## 🎯 **Project Highlights**
 
-- Built a **web app** (React + FastAPI) that trains, compares and explains three PD models — logistic regression,
-  random forest and LightGBM — on a 1M-loan synthetic credit-bureau dataset.
+- Built a **web app** (React + FastAPI) with three workspaces: an **Applicant** workspace (a bank-style online
+  loan application with an instant decision, plain-language reasons, what-if), a **Business** workspace (profit and fairness dashboard, pipeline statistics, a work queue with
+  human review, and a preview-then-publish policy lab) and a **Tech team** workspace (data, insights, live training,
+  model comparison, choosing the primary and second-look models). A **Help** page explains the project to anyone.
+- Built a **decision pipeline**: the **primary model** decides first; its declines go to **Second Look** (automatically
+  or sent by hand); borderline Second Look declines wait for a **person**, who can change the terms, re-score and
+  approve or decline. Approving against the model needs a written reason, and every step is kept in an audit trail.
+- Trained, compared and explained three PD models — logistic regression, random forest and LightGBM — on a 1M-loan
+  synthetic credit-bureau dataset.
 - Found the **inclusion trap**: thin-file default risk falls over time, so a model trained on older weeks over-estimates
   thin-file risk on newer applicants (25.9% predicted vs 17.8% actual) and a flat "approve if PD < 20%" rule denies good payers.
 - Designed a **second-look policy** — per-segment calibration, a drift correction and per-segment thresholds — that
-  **raised test profit from $147.7M to $153.2M and closed the inclusion gap from 36.9 to −5.4 points**.
+  **raised test profit from $147.7M to $153.2M and closed the inclusion gap from 36.9 to −5.4 points**. Used as a second
+  look after the primary model (only on its declines), profit is **$154.0M** and the gap **−2.5 points**.
 - Kept the method honest: time-based splits, policy tuned on weeks the model never saw, and the test set scored once.
 - Made it **teachable**: a guided Insights page explains the raw data, the algorithm (its real first tree), the training
   loop and every decision in plain English, and the Train page shows training live.
@@ -91,11 +99,49 @@ baseline on profit; a measurable reduction in the thin-file inclusion gap; repro
 
 ```mermaid
 flowchart LR
-    UI["React UI<br/>6 pages"] -- "REST /api" --> API["FastAPI<br/>backend/app"]
+    UI["React UI<br/>Applicant · Business · Tech team"] -- "REST /api" --> API["FastAPI<br/>backend/app"]
     API --> ML["features · models · policy<br/>training jobs (background thread)"]
     ML -- reads --> DATA[("data/synth_home_credit<br/>CSV tables")]
     ML -- writes --> ART[("backend/artifacts<br/>features + trained runs")]
 ```
+
+### Using the app
+
+| Workspace | Who | Pages |
+|---|---|---|
+| **Applicant** `/apply` | People applying for a loan | Five-step application form → instant decision, plain-language reasons, loan-amount what-if, next steps. `/apply/status` checks an application by number |
+| **Business** `/business` | Credit / risk managers | Dashboard (profit, approval, default rate, inclusion gap: primary model only vs with Second Look) · Statistics (pipeline counts and charts) · Work queue (process weeks, send declines to Second Look, review borderline cases) · Policy lab (**Preview**, then **Publish**) |
+| **Tech team** `/tech` | Data scientists | Data overview · Insights (data & model) · Train models (live) · Compare models (**Set as primary** / **Set as second look**) |
+| **Help** `/help` | Everyone | Project overview, how-to per role, glossary, FAQ, links to the full guide (`/guide`) and API docs (`/docs`) |
+
+```mermaid
+flowchart LR
+    T["Tech team<br/>trains · picks primary and second-look models"] -->|models| B["Business<br/>runs the pipeline · reviews · publishes policy"]
+    B -->|decisions| A["Applicants<br/>decision + reasons"]
+```
+
+### The decision pipeline
+
+```mermaid
+flowchart LR
+    APP(["New application"]) --> P{"Primary model<br/>risk < 20%?"}
+    P -->|yes| OK1["Approved"]
+    P -->|no| SL{"Second Look<br/>adjusted risk < group cut-off?"}
+    SL -->|yes| OK2["Approved"]
+    SL -->|"no, but within 2 pts"| H["Human review<br/>change terms · re-score · decide"]
+    SL -->|"no, clearly risky"| NO["Declined"]
+    H --> OK3["Approved / Declined<br/>(audit trail)"]
+```
+
+- **Automatic** mode sends every primary decline to Second Look straight away; **Manual** mode lets a business user pick
+  which ones to send (Work queue → *Waiting for Second Look*).
+- The primary cut-off (20%) and the review band (2 points) are set on the Work queue and saved in
+  `backend/artifacts/workflow_settings.json`. Cases and the audit trail live in `backend/artifacts/workflow.db` (SQLite).
+- **Online applications:** the Applicant workspace has a five-step application form (loan, about you, income & work,
+  credit history, review & submit). On submit, `applications.py` builds one feature row: a typical recent applicant
+  from the same credit-history group, with the applicant's answers on top (loan, income, job, tax income, credit score
+  band, late payments, credit checks, earlier loans with us). The case goes through the same pipeline straight away.
+  Name and email are kept only in the local `workflow.db` (git-ignored) and never reach the models.
 
 ---
 
@@ -202,7 +248,7 @@ Thanks to our Challenge Advisor, AI Studio coach and the Break Through Tech AI t
 | Path | What it is |
 |---|---|
 | `backend/app/` | FastAPI app and all ML code (features, models, training, policy, insights) |
-| `frontend/src/` | React UI: Overview, Insights, Train, Compare, Policy lab, Score applicant |
+| `frontend/src/` | React UI: `pages/applicant/`, `pages/business/`, `pages/tech/`, plus Home and Help |
 | `notebooks/second_look_lending.ipynb` | Reproducible EDA + models + policy notebook (built from `build_notebook.py`) |
 | `doc/ARCHITECTURE.md`, `doc/architecture.html` | Architecture and model design |
 | `doc/DATA_DICTIONARY.md` | Every feature and raw column |

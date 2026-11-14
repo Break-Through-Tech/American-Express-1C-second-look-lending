@@ -254,11 +254,9 @@
       <text x="40" y="44" class="d-title">React UI</text>
       <text x="128" y="44" class="d-sub">Vite · Recharts · port 5173 (dev) or served by FastAPI</text>
       <g>
-        <rect x="40" y="60" width="166" height="40" rx="8" class="d-box"/><text x="123" y="85" text-anchor="middle" class="d-text">Overview &amp; EDA</text>
-        <rect x="220" y="60" width="166" height="40" rx="8" class="d-box"/><text x="303" y="85" text-anchor="middle" class="d-text">Train models</text>
-        <rect x="400" y="60" width="166" height="40" rx="8" class="d-box"/><text x="483" y="85" text-anchor="middle" class="d-text">Compare models</text>
-        <rect x="580" y="60" width="166" height="40" rx="8" class="d-box"/><text x="663" y="85" text-anchor="middle" class="d-text">Policy lab</text>
-        <rect x="760" y="60" width="160" height="40" rx="8" class="d-box"/><text x="840" y="85" text-anchor="middle" class="d-text">Score applicant</text>
+        <rect x="40" y="60" width="280" height="40" rx="8" class="d-box"/><text x="180" y="85" text-anchor="middle" class="d-text">Applicant (apply + status)</text>
+        <rect x="340" y="60" width="280" height="40" rx="8" class="d-box"/><text x="480" y="85" text-anchor="middle" class="d-text">Business: dashboard · work queue · policy</text>
+        <rect x="640" y="60" width="280" height="40" rx="8" class="d-box"/><text x="780" y="85" text-anchor="middle" class="d-text">Tech team: data · train · compare</text>
       </g>
 
       <!-- REST arrow -->
@@ -272,7 +270,7 @@
 
       <rect x="40" y="206" width="880" height="36" rx="8" class="d-box"/>
       <text x="56" y="229" class="d-mono">main.py</text>
-      <text x="130" y="229" class="d-sub">REST routes: health · eda · train · jobs · runs · policy · score</text>
+      <text x="130" y="229" class="d-sub">REST routes: health · eda · train · jobs · runs · policy · model roles · workflow · business · portal</text>
 
       <!-- row 1 -->
       <rect x="40" y="256" width="200" height="60" rx="8" class="d-box"/>
@@ -292,9 +290,9 @@
       <rect x="392" y="330" width="176" height="60" rx="8" class="d-box"/>
       <text x="408" y="354" class="d-mono">policy.py</text><text x="408" y="374" class="d-small">cost · calibration · gap</text>
       <rect x="584" y="330" width="160" height="60" rx="8" class="d-box"/>
-      <text x="600" y="354" class="d-mono">applicant.py</text><text x="600" y="374" class="d-small">score one case · SHAP</text>
+      <text x="600" y="354" class="d-mono">workflow.py</text><text x="600" y="374" class="d-small">pipeline · review · audit</text>
       <rect x="760" y="330" width="160" height="60" rx="8" class="d-box"/>
-      <text x="776" y="354" class="d-mono">storage.py</text><text x="776" y="374" class="d-small">save / load runs</text>
+      <text x="776" y="354" class="d-mono">storage.py</text><text x="776" y="374" class="d-small">runs · model roles</text>
 
       <!-- arrows to storage -->
       <line x1="140" y1="414" x2="140" y2="456" class="d-line" marker-end="url(#arr)"/>
@@ -322,11 +320,15 @@
       <thead><tr><th>Page</th><th>What you can do</th></tr></thead>
       <tbody>
         <tr><td>Insights: data &amp; model</td><td><em>Raw data</em>: table map, column types and stats, sample rows, one established and one thin-file applicant followed from raw rows to the final feature row. <em>Model</em>: features, time split, how the model works, hyperparameters in plain English, learning curve, what it learned, PD spread per segment, decisions in dollars, glossary</td></tr>
-        <tr><td>Overview &amp; EDA</td><td>Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values</td></tr>
+        <tr><td>Home · Help</td><td>Pick a workspace (Applicant, Business, Tech team); project overview, how-to per role, glossary, FAQ</td></tr>
+        <tr><td>Apply</td><td>Five-step online loan application; submitting it runs the pipeline and opens the decision</td></tr>
+        <tr><td>Application status</td><td>An applicant's decision in plain language (including "with our review team"), reasons, loan-amount what-if and next steps</td></tr>
+        <tr><td>Business: dashboard, statistics</td><td>Profit and fairness, primary model only vs with Second Look; pipeline counts and charts (approved / declined by the primary model, through Second Look, waiting for a person)</td></tr>
+        <tr><td>Business: work queue, review case</td><td>Process a week, send declines to Second Look (automatic or manual); change a borderline case's terms, re-score, approve or decline with an audit trail</td></tr>
+        <tr><td>Business: policy lab</td><td>Preview policy changes safely, then publish them to live decisions</td></tr>
+        <tr><td>Tech: Data overview</td><td>Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values</td></tr>
         <tr><td>Train models</td><td>Pick a model and edit its settings — every hyperparameter and data setting is explained (what it does, typical range, effect). A live panel shows each training step, the time split, Optuna trials as they finish and the learning curve tree by tree</td></tr>
-        <tr><td>Compare models</td><td>AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, delete runs</td></tr>
-        <tr><td>Policy lab</td><td>Choose calibration, drift correction, penalty, ceiling, or set thresholds by hand; before/after profit and gap, profit and gap curves, calibration plots</td></tr>
-        <tr><td>Score applicant</td><td>Look up a case_id, see baseline vs second-look decision, try what-if changes, see SHAP reasons (LightGBM)</td></tr>
+        <tr><td>Compare models</td><td>AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, set as primary / second look, delete runs</td></tr>
       </tbody>
     </table>
   </div>
@@ -520,6 +522,17 @@
     <li><strong>Segment-aware thresholds.</strong> Try every pair of thresholds from 5% to 50% in 0.5% steps on weeks 86–91, and keep the pair with the best Inclusive Profit Score. Result for the best model: established &lt; 17.5%, thin-file &lt; 24.5%.</li>
   </ol>
 
+  <h3>The decision pipeline</h3>
+  <p>In the app the primary model and Second Look run one after the other, with a person for the close calls.</p>
+  <ol class="steps">
+    <li><strong>Primary model.</strong> Every application is scored by the primary model; raw PD below 20% is approved.</li>
+    <li><strong>Second Look.</strong> Primary declines are sent to Second Look — automatically, or by a business user who picks them on the Work queue. The adjusted PD is compared with the segment's cut-off.</li>
+    <li><strong>Human review.</strong> Second Look declines within the review band (2 points by default, about 260 cases a week) go to a person, who can change the terms, re-score and approve or decline. Approving against the model needs a written reason. Clearly risky cases are declined automatically.</li>
+    <li><strong>Audit trail.</strong> Every step is stored in <code>artifacts/workflow.db</code> (SQLite) with who did it and the terms they changed.</li>
+    <li><strong>Online applications.</strong> The Apply form enters the same pipeline the moment it is submitted. <code>applications.py</code> builds the feature row from a typical recent applicant in the same credit-history group, with the applicant's answers on top. Name and email never reach the models.</li>
+  </ol>
+  <p class="caption">Second Look on primary declines only: $147.7M → $154.0M profit and 36.9 → −2.5 pt inclusion gap on test.</p>
+
   <!-- ===================================================== API -->
   <h2 id="api">7. REST API</h2>
   <p>Interactive docs at <code>http://localhost:8000/docs</code>.</p>
@@ -535,10 +548,19 @@
         <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>val_start_week</code>, <code>tune_trials</code>, <code>name</code></td></tr>
         <tr><td>GET</td><td><code>/api/jobs</code> · <code>/api/jobs/{id}</code></td><td>Job status, progress, logs</td></tr>
         <tr><td>GET / DELETE</td><td><code>/api/runs</code> · <code>/api/runs/{id}</code></td><td>Trained runs and metrics · delete a run</td></tr>
-        <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get or re-run policy analysis: <code>calibration</code>, <code>per_segment</code>, <code>drift</code>, <code>penalty</code>, <code>ceiling</code>, <code>thresholds</code></td></tr>
+        <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get the published policy, or run it: <code>calibration</code>, <code>per_segment</code>, <code>drift</code>, <code>penalty</code>, <code>ceiling</code>, <code>thresholds</code>, <code>save</code> (false = preview, true = publish)</td></tr>
+        <tr><td>GET / PUT</td><td><code>/api/model-roles</code></td><td>Which runs are the primary and second-look models; set one: <code>role</code>, <code>run_id</code></td></tr>
+        <tr><td>GET / PUT</td><td><code>/api/workflow/settings</code></td><td>Pipeline settings: <code>mode</code> (auto / manual), <code>primary_cutoff</code>, <code>review_band</code></td></tr>
+        <tr><td>GET</td><td><code>/api/workflow/summary</code></td><td>Counts per status and week, review progress, repaid share per route</td></tr>
+        <tr><td>POST</td><td><code>/api/workflow/process</code></td><td>Run the primary model on one week: <code>week</code> (92–107)</td></tr>
+        <tr><td>POST</td><td><code>/api/workflow/second-look</code></td><td>Send primary declines to Second Look: <code>case_ids</code> (empty = all waiting)</td></tr>
+        <tr><td>GET</td><td><code>/api/workflow/cases</code> · <code>/api/workflow/cases/{id}</code></td><td>Cases by status; one case with scores, reasons and audit trail</td></tr>
+        <tr><td>POST</td><td><code>/api/workflow/cases/{id}/rescore</code> · <code>/decide</code></td><td>Re-score with changed terms; approve or decline (an override needs a <code>reason</code>)</td></tr>
+        <tr><td>POST</td><td><code>/api/workflow/reset</code></td><td>Clear all cases</td></tr>
+        <tr><td>GET</td><td><code>/api/business/dashboard</code></td><td>Business dashboard: primary model only vs with Second Look</td></tr>
+        <tr><td>POST</td><td><code>/api/portal/apply</code></td><td>Submit an online application; runs the pipeline and returns the case</td></tr>
+        <tr><td>GET / POST</td><td><code>/api/portal/showcase</code> · <code>/api/portal/score</code></td><td>Applicant portal: example applications; one decision with what-if and pipeline status</td></tr>
         <tr><td>GET</td><td><code>/api/insights/raw</code> · <code>/api/runs/{id}/insights</code></td><td>Raw-data walkthrough · model walkthrough for one run (validation weeks only)</td></tr>
-        <tr><td>GET</td><td><code>/api/applicants/random</code></td><td>10 random test applicants</td></tr>
-        <tr><td>POST</td><td><code>/api/runs/{id}/score</code></td><td>Score one applicant: <code>case_id</code>, <code>changes</code></td></tr>
       </tbody>
     </table>
   </div>

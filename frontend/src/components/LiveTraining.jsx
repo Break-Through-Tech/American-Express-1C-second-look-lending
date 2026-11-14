@@ -58,8 +58,8 @@ export default function LiveTraining({ jobId }) {
         <div className="spacer" />
         {job.status === 'done' && live.result && (
           <>
-            <Link to="/models">Compare models →</Link>
-            <Link to={`/insights?tab=model&run=${live.result.run_id}`}>Explain this model →</Link>
+            <Link to="/tech/models">Compare models →</Link>
+            <Link to={`/tech/insights?tab=model&run=${live.result.run_id}`}>Explain this model →</Link>
           </>
         )}
       </div>

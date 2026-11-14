@@ -68,7 +68,7 @@ export function NoRuns() {
   return (
     <div className="card empty">
       <h2>No trained models yet</h2>
-      <p>Go to <Link to="/train">Train models</Link> and train your first model.</p>
+      <p>Go to <Link to="/tech/train">Tech team → Train models</Link> and train your first model.</p>
     </div>
   )
 }

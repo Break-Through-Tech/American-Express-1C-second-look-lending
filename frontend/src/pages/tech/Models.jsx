@@ -1,11 +1,23 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api.js'
-import { ErrorBox, NoRuns } from '../components/ui.jsx'
-import { useRuns } from '../components/useRuns.js'
-import { money, number, points } from '../format.js'
+import { api } from '../../api.js'
+import { ErrorBox, NoRuns } from '../../components/ui.jsx'
+import { useRuns } from '../../components/useRuns.js'
+import { money, number, points } from '../../format.js'
 
 export default function Models() {
   const { runs, selected, select, reload, error } = useRuns()
+  const [roles, setRoles] = useState({})
+
+  // The primary model decides first; the second-look model reviews its declines
+  const loadRoles = () => api.modelRoles().then(setRoles).catch(() => {})
+  useEffect(() => { loadRoles() }, [runs])
+
+  const assign = async (role, runId) => {
+    const name = role === 'primary' ? 'primary model (decides every application first)' : 'second-look model (reviews primary declines)'
+    if (!window.confirm(`Make this the ${name}? Live decisions use it from now on.`)) return
+    await api.setModelRole(role, runId)
+    loadRoles()
+  }
   const [split, setSplit] = useState('validation')
 
   if (error) return <ErrorBox error={error} />
@@ -54,7 +66,12 @@ export default function Models() {
                     const diff = baselineAuc ? m.all.auc - baselineAuc : null
                     return (
                       <tr key={run.run_id} className={`clickable ${run.run_id === selected ? 'selected' : ''}`} onClick={() => select(run.run_id)}>
-                        <td><strong>{run.name}</strong><div className="small muted">{run.model_name} · {run.created_at}</div></td>
+                        <td>
+                          <strong>{run.name}</strong>
+                          {run.run_id === roles.primary && <span className="badge good" style={{ marginLeft: 6 }}>● primary</span>}
+                          {run.run_id === roles.second_look && <span className="badge good" style={{ marginLeft: 6 }}>● second look</span>}
+                          <div className="small muted">{run.model_name} · {run.created_at}</div>
+                        </td>
                         <td className="num">{number(m.all.auc)}</td>
                         <td className="num">{diff == null || run.model_type === 'logreg' ? '—' : <span className={diff > 0 ? 'delta-good' : 'delta-bad'}>{diff > 0 ? '+' : ''}{diff.toFixed(4)}</span>}</td>
                         <td className="num">{number(m.all.logloss)}</td>
@@ -71,14 +88,14 @@ export default function Models() {
             </div>
             <p className="card-note">Click a row to see its details. Profit and gap are on the test set with the default policy settings.</p>
           </div>
-          {selected && <RunDetail runId={selected} onDeleted={reload} />}
+          {selected && <RunDetail runId={selected} onDeleted={reload} roles={roles} onAssign={assign} />}
         </>
       )}
     </>
   )
 }
 
-function RunDetail({ runId, onDeleted }) {
+function RunDetail({ runId, onDeleted, roles, onAssign }) {
   const [run, setRun] = useState(null)
   const [error, setError] = useState(null)
 
@@ -105,6 +122,12 @@ function RunDetail({ runId, onDeleted }) {
         <div className="row">
           <h2 style={{ margin: 0 }}>{run.name}</h2>
           <div className="spacer" />
+          {roles.primary === runId
+            ? <span className="badge good">● Primary model</span>
+            : <button className="chip" onClick={() => onAssign('primary', runId)}>Set as primary</button>}
+          {roles.second_look === runId
+            ? <span className="badge good">● Second-look model</span>
+            : <button className="chip" onClick={() => onAssign('second_look', runId)}>Set as second look</button>}
           <button className="danger chip" onClick={remove}>Delete</button>
         </div>
         <p className="muted small">

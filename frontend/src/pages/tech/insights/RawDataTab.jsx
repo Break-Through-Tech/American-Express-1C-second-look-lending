@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { api } from '../../api.js'
-import { ErrorBox, Stat } from '../../components/ui.jsx'
-import { count, percent } from '../../format.js'
+import { api } from '../../../api.js'
+import { ErrorBox, Stat } from '../../../components/ui.jsx'
+import { count, percent } from '../../../format.js'
 
 const DEPTH_HELP = {
   0: 'Depth 0 — one row per loan. Join straight onto base.',

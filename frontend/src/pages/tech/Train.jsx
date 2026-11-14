@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../api.js'
-import LiveTraining from '../components/LiveTraining.jsx'
-import { ErrorBox, InfoTip } from '../components/ui.jsx'
+import { api } from '../../api.js'
+import LiveTraining from '../../components/LiveTraining.jsx'
+import { ErrorBox, InfoTip } from '../../components/ui.jsx'
 
 const MODEL_HELP = {
   logreg: 'Baseline. Gives every feature a weight and adds them up. Linear, fast and easy to explain — the bar every other model must beat.',
@@ -250,7 +250,7 @@ function JobRow({ job, watched, onWatch }) {
           {settings.tune_trials > 0 && ` · ${settings.tune_trials} Optuna trials`} · {job.created_at}
         </span>
         <div className="spacer" />
-        {job.status === 'done' && job.result?.run_id && <Link to="/models">View results →</Link>}
+        {job.status === 'done' && job.result?.run_id && <Link to="/tech/models">View results →</Link>}
         <button className="chip" onClick={onWatch} disabled={watched}>{watched ? 'Watching' : 'Watch'}</button>
       </div>
       <div className="progress" style={{ margin: '8px 0' }}><div style={{ width: `${job.progress * 100}%` }} /></div>

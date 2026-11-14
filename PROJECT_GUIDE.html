@@ -176,108 +176,69 @@
 
     <!-- 3 -->
     <h2 id="architecture">3. Architecture</h2>
-    <h3>High-level flow of the application</h3>
-    <p>The journey through the app, from raw data to a decision. Each column is one step: the blue box is the page you
-      use, the box under it is what the backend does for you.</p>
+    <h3>The big picture</h3>
+    <p>Data goes in on the left, a decision comes out on the right. The tech team controls the model, the business controls
+      the policy, and the applicant sees the result.</p>
     <div class="diagram"><div class="mermaid">
 flowchart LR
-    subgraph ST1["1 · Explore"]
-        direction TB
-        U1("Overview + Insights<br/>pages"):::ui --> S1("Read 8 CSV tables<br/>build 53 features"):::ml
+    DATA[("Dataset<br/>8 CSV tables · 1.2M loans")]:::data
+    subgraph BACK["Backend"]
+        direction LR
+        F("1 · Build features<br/>one row per loan"):::ml
+        M("2 · Model<br/>predicts risk (PD)"):::ml
+        P("3 · Policy<br/>approve or deny"):::decision
+        F --> M --> P
     end
-    subgraph ST2["2 · Train"]
-        direction TB
-        U2("Train page<br/>watch it live"):::ui --> S2("Fit LR · RF · LightGBM<br/>in a background job"):::ml
-    end
-    subgraph ST3["3 · Compare"]
-        direction TB
-        U3("Compare models<br/>page"):::ui --> S3("AUC · LogLoss per segment<br/>on validation weeks"):::ml
-    end
-    subgraph ST4["4 · Decide"]
-        direction TB
-        U4("Policy lab<br/>page"):::ui --> S4("Calibrate · drift fix<br/>segment thresholds"):::ml
-    end
-    subgraph ST5["5 · Use"]
-        direction TB
-        U5("Score applicant<br/>page"):::ui --> S5{"Approve or deny<br/>+ reasons"}:::decision
-    end
-    DATA[("Synthetic dataset<br/>1.2M loans")]:::data ==> ST1
-    ST1 ==> ST2 ==> ST3 ==> ST4 ==> ST5
-    ST5 ==> OUT(["More profit<br/>smaller inclusion gap"]):::good
+    DATA --> F
+    TECH("Tech team<br/>trains models, picks the<br/>primary and second-look ones"):::api -.-> M
+    BUS("Business<br/>runs the pipeline, reviews<br/>cases, publishes the policy"):::api -.-> P
+    P --> APP("Applicant<br/>sees the decision<br/>and why"):::ui
     </div></div>
 
-    <h3>System architecture</h3>
-    <p>One React app talks to one FastAPI server. Training runs on a background thread so the UI stays responsive and can
-      show progress live. The dataset is read-only; everything the app produces goes to <code>backend/artifacts/</code>.</p>
+    <h3>System architecture: three layers</h3>
+    <p>Read it top to bottom. The <strong>browser</strong> shows the three workspaces and only talks to the server through
+      <code>/api</code> calls. The <strong>server</strong> has four groups of Python files. The <strong>disk</strong> holds the
+      read-only dataset and everything the app saves.</p>
     <div class="diagram"><div class="mermaid">
 flowchart TB
-    subgraph UI["React UI · frontend/src"]
+    subgraph L1["1 · Browser — React app (frontend/src/pages)"]
         direction LR
-        P1("Overview & EDA"):::ui
-        P2("Insights"):::ui
-        P3("Train models"):::ui
-        P4("Compare models"):::ui
-        P5("Policy lab"):::ui
-        P6("Score applicant"):::ui
-        P1 ~~~ P2 ~~~ P3 ~~~ P4 ~~~ P5 ~~~ P6
+        A("Applicant portal<br/>applicant/"):::ui
+        B("Business workspace<br/>business/"):::ui
+        T("Tech workspace<br/>tech/"):::ui
+        A ~~~ B ~~~ T
     end
-    subgraph API["FastAPI · backend/app"]
-        MAIN("main.py · API routes"):::api
-        EDA("eda.py"):::api
-        INS("insights.py · algorithm.py"):::api
-        APPL("applicant.py"):::api
-        JOBS("jobs.py · background thread"):::api
-        TRAIN("training.py"):::ml
-        MODELS("models.py<br/>LR · RF · LightGBM"):::ml
-        ANALYSIS("analysis.py"):::ml
-        POLICY("policy.py<br/>calibration · thresholds"):::ml
-        FEAT("features.py"):::ml
-        STORE("storage.py"):::api
-        MAIN --> EDA & INS & APPL & JOBS
-        JOBS --> TRAIN
-        TRAIN --> MODELS & ANALYSIS & FEAT & STORE
-        ANALYSIS --> POLICY
-        EDA --> FEAT
-        APPL --> STORE
+    subgraph L2["2 · Server — FastAPI (backend/app)"]
+        direction LR
+        R("API routes<br/>main.py"):::api
+        D("Data + insights<br/>features · eda · insights"):::ml
+        TR("Training<br/>training · models · jobs"):::ml
+        DE("Decisions<br/>policy · analysis · scoring<br/>workflow · applicant · business"):::ml
+        R --> D & TR & DE
     end
-    UI ==>|"REST / JSON · /api/..."| MAIN
-    FEAT -->|reads| DATA[("data/synth_home_credit<br/>8 CSV tables")]:::data
-    FEAT -->|caches| ART[("artifacts/features<br/>parquet")]:::store
-    STORE -->|saves| RUNS[("artifacts/runs<br/>models · predictions · policy")]:::store
+    subgraph L3["3 · Files on disk"]
+        direction LR
+        CSV[("Dataset<br/>data/synth_home_credit")]:::data
+        RUNS[("Features, trained runs,<br/>cases + audit trail<br/>backend/artifacts")]:::store
+    end
+    L1 ==>|"HTTP calls to /api/..."| R
+    D --> CSV
+    TR --> RUNS
+    DE --> RUNS
     </div></div>
 
     <h3>What happens when you press "Start training"</h3>
     <div class="diagram"><div class="mermaid">
-sequenceDiagram
-    autonumber
-    actor You
-    box rgba(42,120,214,0.14) Browser
-        participant UI as Train page
+flowchart TB
+    U("You press Start training<br/>on the Train page"):::ui --> API("POST /api/train<br/>answers at once with a job id"):::api
+    API --> JOB("Background job · jobs.py"):::api
+    subgraph STEPS["training.py · one step after another"]
+        direction LR
+        S1("Load<br/>features"):::ml --> S2("Split<br/>by week"):::ml --> S3("Tune<br/>Optuna, optional"):::ml --> S4("Fit the<br/>model"):::ml --> S5("Score, calibrate,<br/>pick cut-offs"):::ml
     end
-    box rgba(15,123,90,0.14) Server
-        participant API as FastAPI
-        participant Job as Job thread
-        participant T as training.py
-    end
-    box rgba(138,145,142,0.16) Disk
-        participant Disk as artifacts/runs
-    end
-    You->>UI: pick model + settings, press Start
-    UI->>API: POST /api/train
-    API->>Job: start_job(settings)
-    API-->>UI: job_id (returns at once)
-    Job->>T: train(settings, live)
-    rect rgba(107,79,216,0.12)
-        loop every second
-            UI->>API: GET /api/jobs/{job_id}
-            API-->>UI: step · Optuna trials · learning curve · logs
-        end
-    end
-    T->>T: load features, split by week, tune, fit, score
-    T->>Disk: model.joblib · predictions · info.json
-    T->>T: calibrate + pick thresholds
-    T->>Disk: policy.json · calibrator.joblib
-    Job-->>UI: done · run_id
+    JOB --> STEPS
+    STEPS --> SAVE[("Saved run · backend/artifacts/runs<br/>appears in Compare models")]:::store
+    JOB -. "progress every second (live view)" .-> U
     </div></div>
 
     <!-- 4 -->
@@ -285,36 +246,10 @@ sequenceDiagram
     <p>From eight raw tables to an approve / deny decision. The model never sees the raw tables; it sees one row of 53
       features per loan.</p>
     <div class="diagram"><div class="mermaid">
-flowchart TB
-    subgraph RAW["8 raw tables · joined by case_id"]
-        direction LR
-        subgraph D0["Depth 0 · one row per loan"]
-            direction TB
-            A1[("base")]:::data
-            A2[("static_0")]:::data
-            A3[("static_cb_0")]:::bureau
-        end
-        subgraph D1["Depth 1–2 · many rows per loan"]
-            direction TB
-            B1[("person_1")]:::data
-            B2[("credit_bureau_a_1")]:::bureau
-            B3[("credit_bureau_a_2")]:::bureau
-            B4[("applprev_1")]:::data
-            B5[("tax_registry_a_1")]:::data
-        end
-    end
-    subgraph FLOW["From features to a decision"]
-        direction LR
-        F("Feature table<br/>1 row per loan · 53 features"):::ml
-        S("Split by week"):::ml
-        M("Train PD model<br/>LR · RF · LightGBM"):::ml
-        C("Calibrate per segment<br/>+ drift correction"):::ml
-        T("Per-segment<br/>thresholds"):::decision
-        DEC{"Approve<br/>or deny"}:::decision
-        F --> S --> M --> C --> T --> DEC
-    end
-    D0 -->|join| F
-    D1 -->|"aggregate: count · mean · max · sum"| F
+flowchart LR
+    T[("8 raw tables<br/>3 of them credit bureau")]:::data --> F("53 features<br/>one row per loan"):::ml
+    F --> M("Model<br/>LR · RF · LightGBM"):::ml --> PD("Risk score<br/>PD"):::ml
+    PD --> SL("Second Look<br/>adjust scores +<br/>one cut-off per group"):::ml --> D{"Approve<br/>or deny"}:::decision
     </div></div>
     <p><strong>Thin-file flag:</strong> an applicant with zero rows in <code>credit_bureau_a_1</code>. Those people also miss
       <code>static_cb_0</code> and <code>credit_bureau_a_2</code>, so every bureau feature is empty for them.</p>
@@ -395,6 +330,39 @@ flowchart LR
       <li>Thresholds are searched on weeks 86–91 (every pair from 5% to 50%) and the best score wins.</li>
     </ul>
 
+    <h3>The decision pipeline: primary → Second Look → a person</h3>
+    <p>In the app the two run one after the other. The <strong>primary model</strong> decides first with one 20% cut-off. Only
+      its declines go to <strong>Second Look</strong> — automatically, or when a business user sends them (Work queue →
+      Manual). Second Look declines that are close to the cut-off wait for a <strong>person</strong>.</p>
+    <div class="diagram"><div class="mermaid">
+flowchart LR
+    APP(["New application"]):::ui
+    P{"Primary model<br/>risk < 20%?"}:::decision
+    OK1(["Approved"]):::good
+    SL{"Second Look<br/>adjusted risk<br/>< group cut-off?"}:::decision
+    OK2(["Approved"]):::good
+    H("Human review<br/>change terms · re-score<br/>approve or decline"):::data
+    NO(["Declined"]):::bad
+    LOG[("Audit trail<br/>workflow.db")]:::store
+    APP --> P
+    P -->|yes| OK1
+    P -->|no| SL
+    SL -->|yes| OK2
+    SL -->|"no, within 2 pts"| H
+    SL -->|"no, clearly risky"| NO
+    H -.-> LOG
+    </div></div>
+    <ul>
+      <li><strong>Review band</strong> (2 points by default) decides how close counts as borderline — about 260 cases a week.</li>
+      <li>A reviewer can approve against the model (an <strong>override</strong>) only with a written reason. Every step, who
+        did it and the terms they changed go into the audit trail.</li>
+      <li>The primary and second-look models are chosen by the tech team on <em>Compare models</em>; until then both use the
+        run with the best validation AUC. Settings live in <code>workflow_settings.json</code> and <code>model_roles.json</code>.</li>
+      <li><strong>Online applications</strong> enter here too. <code>applications.py</code> starts from a typical recent applicant
+        in the same credit-history group and puts the applicant's answers on top, so the models get a full feature row. Name and
+        email stay in the local <code>workflow.db</code> and never reach the models.</li>
+    </ul>
+
     <!-- 7 -->
     <h2 id="setup">7. Setup guide</h2>
     <p><strong>You need:</strong> Python 3.9+, Node.js 18+, git, and the dataset folder <code>synth_home_credit</code>
@@ -432,43 +400,38 @@ npm run dev                          # open http://localhost:5173</code></pre>
 
     <!-- 8 -->
     <h2 id="use">8. How to use the app</h2>
+    <p>The app has three workspaces — pick one on the home page or with the switcher at the top. <strong>Help</strong>
+      (top right) has the project overview, how-to guides, a glossary and FAQs.</p>
     <div class="grid-2">
       <div class="card page-card">
-        <h3>Overview &amp; EDA</h3>
-        <div class="path">/</div>
-        <p>Dataset size, default rates per segment, the weekly drift chart, a feature-vs-default explorer, table depths and
-          missing values. <strong>Start here</strong> to understand the problem.</p>
+        <h3>Applicant</h3>
+        <div class="path">/apply · /apply/status · /apply/1000005</div>
+        <p>For people applying for a loan. A five-step form (loan, about you, income &amp; work, credit history, review &amp; submit)
+          gives an instant decision and an application number; <em>Check your status</em> finds it again. The decision comes first, then plain-language
+          reasons (<em>what helped</em>, <em>what held it back</em>), a loan-amount slider for what-if, and next steps.
+          No risk scores or jargon. "Approved through Second Look" appears when the second look made the difference.</p>
       </div>
       <div class="card page-card">
-        <h3>Insights: data &amp; model</h3>
-        <div class="path">/insights · /insights?tab=model</div>
-        <p><em>Raw data</em>: click any table to see 5 records, its columns and stats; follow one applicant from raw rows to
-          one feature row. <em>Model</em>: the big-picture flow, the algorithm's training loop, its real first tree, how one
-          prediction is built, and what decisions are worth.</p>
+        <h3>Business</h3>
+        <div class="path">/business · /business/statistics · /business/pipeline · /business/policy</div>
+        <p><strong>Dashboard</strong>: profit, approval rate, default rate and inclusion gap, primary model only vs with
+          Second Look. <strong>Statistics</strong>: how many the primary model approved or declined, how many went through
+          Second Look and how many wait for a person, with charts. <strong>Work queue</strong>: process a week, send declines
+          to Second Look (automatic or manual), open a borderline case, change terms, re-score and decide.
+          <strong>Policy lab</strong>: <em>Preview</em> a policy change safely; <em>Publish</em> makes it live.</p>
       </div>
       <div class="card page-card">
-        <h3>Train models</h3>
-        <div class="path">/train</div>
-        <p>Pick a model, adjust settings (hover ⓘ for what each does), choose Optuna trials, press Start. The live panel shows
-          each step, Optuna trials and the learning curve.</p>
+        <h3>Tech team</h3>
+        <div class="path">/tech · /tech/insights · /tech/train · /tech/models</div>
+        <p><strong>Data overview</strong> and <strong>Insights</strong>: the data and how models work. <strong>Train
+          models</strong>: settings with ⓘ tooltips and a live training view. <strong>Compare models</strong>: compare on
+          validation, then <em>Set as primary</em> or <em>Set as second look</em>.</p>
       </div>
       <div class="card page-card">
-        <h3>Compare models</h3>
-        <div class="path">/models</div>
-        <p>AUC, LogLoss and Brier for every run, split by segment. Choose on <strong>Validation</strong>; the test tab is a
-          final check only. Click a run for details and feature importance.</p>
-      </div>
-      <div class="card page-card">
-        <h3>Policy lab</h3>
-        <div class="path">/policy</div>
-        <p>Change calibration, drift correction, gap penalty and default-rate ceiling, or set thresholds by hand. See
-          before / after profit and gap, profit and gap curves and calibration plots.</p>
-      </div>
-      <div class="card page-card">
-        <h3>Score applicant</h3>
-        <div class="path">/applicant · /applicant?case=1000001</div>
-        <p>Look up any loan, see the baseline and second-look decisions side by side, try what-if changes, and read the SHAP
-          reasons behind a LightGBM score.</p>
+        <h3>Help</h3>
+        <div class="path">/help</div>
+        <p>Project overview, how the workspaces connect, step-by-step guides for each role, how decisions are made, a
+          glossary, FAQs and links to this guide and the API docs.</p>
       </div>
     </div>
     <div class="note"><strong>Golden rule:</strong> make every choice (model, settings, policy) on validation. Look at the
@@ -486,7 +449,9 @@ npm run dev                          # open http://localhost:5173</code></pre>
       <li><strong><code>backend/app/training.py</code></strong> — <code>train()</code> ties it together: split, tune, fit, score, save.</li>
       <li><strong><code>backend/app/policy.py</code></strong> — the money maths: calibration, drift, profit, gap, threshold search.</li>
       <li><strong><code>backend/app/main.py</code></strong> — every API route in one file; each route is a few lines.</li>
-      <li><strong><code>frontend/src/api.js</code></strong> then <strong><code>frontend/src/pages/</code></strong> — every API call, then one page at a time.</li>
+      <li><strong><code>frontend/src/api.js</code></strong>, then <strong><code>App.jsx</code></strong> (routes) and
+        <strong><code>components/Layout.jsx</code></strong> (header and workspaces), then <strong><code>pages/</code></strong> —
+        one folder per workspace: <code>applicant/</code>, <code>business/</code>, <code>tech/</code>.</li>
     </ol>
 
     <h3>Every backend file</h3>
@@ -502,29 +467,18 @@ npm run dev                          # open http://localhost:5173</code></pre>
           <tr><td><code>jobs.py</code></td><td>Background thread that runs training jobs</td></tr>
           <tr><td><code>policy.py</code></td><td>Metrics, calibration, drift, profit, inclusion gap, threshold search</td></tr>
           <tr><td><code>analysis.py</code></td><td>Compares the four policies for a run and saves the result</td></tr>
-          <tr><td><code>storage.py</code></td><td>Save, list, load and delete runs</td></tr>
+          <tr><td><code>storage.py</code></td><td>Save, list, load and delete runs; which run is the primary / second-look model</td></tr>
+          <tr><td><code>scoring.py</code></td><td>Pipeline settings, and the primary and Second Look scores for every test application</td></tr>
+          <tr><td><code>workflow.py</code></td><td>The decision pipeline: process a week, send to Second Look, human review, audit trail (SQLite)</td></tr>
           <tr><td><code>eda.py</code></td><td>Numbers for the Overview page</td></tr>
           <tr><td><code>insights.py</code>, <code>algorithm.py</code>, <code>feature_info.py</code></td><td>Numbers and descriptions for the Insights page</td></tr>
           <tr><td><code>applicant.py</code></td><td>Score one applicant with what-if changes</td></tr>
+          <tr><td><code>applications.py</code></td><td>Online applications: save the form and turn it into one feature row for the models</td></tr>
+          <tr><td><code>business.py</code></td><td>Business dashboard numbers: primary model only vs with Second Look, on the recent weeks</td></tr>
           <tr><td><code>main.py</code>, <code>cli.py</code></td><td>API routes and the command-line trainer</td></tr>
         </tbody>
       </table>
     </div>
-
-    <h3>How one request travels</h3>
-    <div class="diagram"><div class="mermaid">
-flowchart LR
-    U("PolicyLab.jsx<br/>page"):::ui
-    A("api.js<br/>POST /api/runs/{id}/policy"):::ui
-    R("main.py<br/>update_policy()"):::api
-    AN("analysis.py<br/>run_policy_analysis()"):::ml
-    P("policy.py<br/>calibrate · search · score"):::ml
-    S[("storage.py<br/>policy.json")]:::store
-    U --> A --> R --> AN
-    AN --> P
-    AN --> S
-    AN -. JSON result .-> U
-    </div></div>
 
     <h3>Common changes</h3>
     <div class="grid-2">
@@ -555,9 +509,19 @@ flowchart LR
           <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>tune_trials</code>, weeks</td></tr>
           <tr><td>GET</td><td><code>/api/jobs</code>, <code>/api/jobs/{id}</code></td><td>Job list, or one job with logs and live progress</td></tr>
           <tr><td>GET / DELETE</td><td><code>/api/runs</code>, <code>/api/runs/{id}</code></td><td>Trained runs and their metrics; delete a run</td></tr>
-          <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get or re-run the policy analysis with new options</td></tr>
+          <tr><td>GET / POST</td><td><code>/api/runs/{id}/policy</code></td><td>Get the published policy, or run it with new options (<code>save: false</code> = preview, <code>true</code> = publish)</td></tr>
+          <tr><td>GET / PUT</td><td><code>/api/model-roles</code></td><td>Which runs are the primary and second-look models; set one (<code>role</code>, <code>run_id</code>)</td></tr>
+          <tr><td>GET / PUT</td><td><code>/api/workflow/settings</code></td><td>Pipeline settings: <code>mode</code> (auto / manual), <code>primary_cutoff</code>, <code>review_band</code></td></tr>
+          <tr><td>GET</td><td><code>/api/workflow/summary</code></td><td>Counts per status and per week, review progress, repaid share per route</td></tr>
+          <tr><td>POST</td><td><code>/api/workflow/process</code></td><td>Run the primary model on one week (92–107)</td></tr>
+          <tr><td>POST</td><td><code>/api/workflow/second-look</code></td><td>Send primary declines to Second Look (chosen <code>case_ids</code>, or all waiting)</td></tr>
+          <tr><td>GET</td><td><code>/api/workflow/cases</code>, <code>/api/workflow/cases/{id}</code></td><td>Cases by status; one case with scores, reasons and audit trail</td></tr>
+          <tr><td>POST</td><td><code>/api/workflow/cases/{id}/rescore</code>, <code>/decide</code></td><td>Re-score with changed terms; approve or decline (override needs a <code>reason</code>)</td></tr>
+          <tr><td>POST</td><td><code>/api/workflow/reset</code></td><td>Clear all cases and start over</td></tr>
+          <tr><td>GET</td><td><code>/api/business/dashboard</code></td><td>Business dashboard numbers: primary model only vs with Second Look</td></tr>
+          <tr><td>POST</td><td><code>/api/portal/apply</code></td><td>Submit an online application; it goes through the pipeline straight away</td></tr>
+          <tr><td>GET / POST</td><td><code>/api/portal/showcase</code>, <code>/api/portal/score</code></td><td>Applicant portal: example applications, and one decision with what-if changes</td></tr>
           <tr><td>GET</td><td><code>/api/insights/raw</code>, <code>/api/runs/{id}/insights</code>, <code>/api/runs/{id}/algorithm</code></td><td>Insights page data</td></tr>
-          <tr><td>GET / POST</td><td><code>/api/applicants/random</code>, <code>/api/runs/{id}/score</code></td><td>Random applicants; score one with what-if changes</td></tr>
         </tbody>
       </table>
     </div>

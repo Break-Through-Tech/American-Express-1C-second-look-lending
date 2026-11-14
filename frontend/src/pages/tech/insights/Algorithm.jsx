@@ -1,8 +1,8 @@
 // The "how the algorithm works" steps of Insights → Model, all drawn from the real trained model
 import { useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { ChartTooltip } from '../../components/ui.jsx'
-import { count, percent } from '../../format.js'
+import { ChartTooltip } from '../../../components/ui.jsx'
+import { count, percent } from '../../../format.js'
 
 const ALGORITHM_NAMES = {
   lightgbm: 'Gradient boosted decision trees (LightGBM)',

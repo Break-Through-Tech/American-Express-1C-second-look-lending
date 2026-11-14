@@ -40,3 +40,19 @@ function localStorageGet(key) {
 function localStorageSet(key, value) {
   try { localStorage.setItem(key, value) } catch { /* private mode or blocked storage */ }
 }
+
+// The two model roles: primary decides first, second look reviews the declines (set by the tech team)
+export function useModelRoles() {
+  const [roles, setRoles] = useState(null)
+  const [runs, setRuns] = useState(null)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    Promise.all([api.modelRoles(), api.runs()])
+      .then(([modelRoles, list]) => { setRoles(modelRoles); setRuns(list) })
+      .catch(setError)
+  }, [])
+
+  const find = (runId) => runs?.find((r) => r.run_id === runId) || null
+  return { roles, runs, error, primaryRun: find(roles?.primary), secondLookRun: find(roles?.second_look) }
+}

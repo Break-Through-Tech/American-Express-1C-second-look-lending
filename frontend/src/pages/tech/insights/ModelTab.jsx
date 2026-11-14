@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api } from '../../api.js'
-import { ChartTooltip, ErrorBox, Legend, NoRuns, RunPicker, Stat } from '../../components/ui.jsx'
-import { useRuns } from '../../components/useRuns.js'
-import { count, money, number, percent } from '../../format.js'
+import { api } from '../../../api.js'
+import { ChartTooltip, ErrorBox, Legend, NoRuns, RunPicker, Stat } from '../../../components/ui.jsx'
+import { useRuns } from '../../../components/useRuns.js'
+import { count, money, number, percent } from '../../../format.js'
 import { BigPicture, StepAlgorithm, StepInside, StepOnePrediction } from './Algorithm.jsx'
 
 // One-line story for each model type
@@ -278,7 +278,7 @@ function StepLearned({ number: n, data }) {
         ))}
       </div>
       <p className="small muted" style={{ marginTop: 8 }}>
-        Want the reasons for one specific applicant? Use <Link to="/applicant">Score applicant</Link> with a LightGBM run.
+        Want the reasons for one specific applicant? Open it from <Link to="/business/pipeline">Business → Work queue</Link>.
       </p>
     </Step>
   )
@@ -373,7 +373,7 @@ function StepDecisions({ number: n, data }) {
         <OutcomeMatrix title="Second-look policy" cells={data.outcomes.second_look[segment]} highlight />
       </div>
       <p className="small muted" style={{ marginTop: 8 }}>
-        Validation weeks only. Try other settings in the <Link to="/policy">Policy lab</Link>.
+        Validation weeks only. Try other settings in the <Link to="/business/policy">Business → Policy lab</Link>.
       </p>
     </Step>
   )

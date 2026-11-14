@@ -3,7 +3,7 @@ import joblib
 import numpy as np
 import pandas as pd
 
-from app import analysis, config, features, storage
+from app import analysis, applications, business, config, features, storage
 
 EDITABLE_FIELDS = [
     "mainoccupationinc_384A", "credamount_770A", "annuity_780A", "days_employed_700P",
@@ -32,6 +32,8 @@ def expected_value(pd_value):
 
 
 def find_applicant(case_id):
+    if applications.is_online(case_id):
+        return "online", applications.feature_row(case_id)
     for split in ["test", "train"]:
         df = features.load_features(split)
         row = df[df["case_id"] == case_id]
@@ -42,7 +44,11 @@ def find_applicant(case_id):
 
 def score(run_id, case_id, changes=None):
     split, row = find_applicant(case_id)
-    actual = features.load_solution().get(case_id) if split == "test" else row["target"].iloc[0]
+    actual = None  # nobody knows yet whether an online applicant will repay
+    if split == "test":
+        actual = features.load_solution().get(case_id)
+    elif split == "train":
+        actual = row["target"].iloc[0]
 
     # Apply the edits, then recompute anything derived from them
     for field, value in (changes or {}).items():
@@ -84,15 +90,55 @@ def score(run_id, case_id, changes=None):
             "approve": calibrated_pd < second_look_threshold,
             "expected_value": expected_value(calibrated_pd),
         },
-        "reasons": model.explain(row),
+        "reasons": reasons_for(model, row, split),
         "editable": {f: to_plain(row[f].iloc[0]) for f in EDITABLE_FIELDS},
         "profile": {f: to_plain(row[f].iloc[0]) for f in PROFILE_FIELDS},
+        "application": applications.public_details(case_id) if split == "online" else None,
     }
 
 
-def random_applicants(count=10):
-    df = features.load_features("test")
-    thin = df[df["thin_file"] == 1].sample(count // 2)
-    established = df[df["thin_file"] == 0].sample(count // 2)
-    return [{"case_id": int(r.case_id), "thin_file": bool(r.thin_file)}
-            for r in pd.concat([thin, established]).itertuples()]
+def reasons_for(model, row, split):
+    if split != "online":
+        return model.explain(row)
+    # Online applications: only reasons based on what the applicant told us
+    reasons = model.explain(row, top=40)
+    return [r for r in reasons if r["feature"] in applications.FROM_FORM][:8]
+
+
+# Stories the Applicant portal shows as sample applications
+STORIES = {
+    "second_look": "Approved thanks to Second Look",
+    "approved": "Approved",
+    "in_review": "With our review team",
+    "not_approved": "Not approved this time",
+}
+
+
+def showcase(run_id, per_story=2):
+    """A few recent applications per story, picked the same way every time."""
+    df = business.decisions(run_id)
+    thin = df["thin_file"] == 1
+    declined = ~df["second_look"] & ~df["in_review"]
+    # One group per story; the last two take one applicant from each segment
+    groups = [
+        ("second_look", df[thin & df["second_look"] & ~df["baseline"]], per_story),
+        ("approved", df[~thin & df["baseline"]], per_story),
+        ("in_review", df[df["in_review"]], 1),
+        ("not_approved", df[thin & declined], 1),
+        ("not_approved", df[~thin & declined], 1),
+    ]
+    applications = features.load_features("test").set_index("case_id")
+    picks = []
+    for story, group, count in groups:
+        for case_id in group.sample(min(count, len(group)), random_state=7)["case_id"]:
+            info = applications.loc[case_id]
+            picks.append({
+                "case_id": int(case_id),
+                "story": story,
+                "story_label": STORIES[story],
+                "thin_file": bool(info["thin_file"]),
+                "income": to_plain(info["mainoccupationinc_384A"]),
+                "credit_amount": to_plain(info["credamount_770A"]),
+                "payment": to_plain(info["annuity_780A"]),
+            })
+    return picks

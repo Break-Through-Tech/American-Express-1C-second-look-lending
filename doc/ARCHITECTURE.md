@@ -61,7 +61,8 @@ Every model gets the second-look policy, and every one raises profit and closes 
 
 ```
 ┌──────────────────────── React UI (Vite, port 5173) ────────────────────────┐
-│  Overview & EDA │ Train models │ Compare models │ Policy lab │ Score applicant│
+│  Applicant (apply) │  Business (dashboard, statistics, work queue, policy)  │
+│                    │  Tech team (data, insights, train, compare models)     │
 └──────────────────────────────────┬──────────────────────────────────────────┘
                                    │  REST / JSON  (/api/...)
 ┌──────────────────────── FastAPI (port 8000) — app/main.py ─────────────────┐
@@ -70,7 +71,8 @@ Every model gets the second-look policy, and every one raises profit and closes 
 │  (EDA numbers) (CSV → features)  models.py  (LR / RF / LightGBM)            │
 │                                 analysis.py ──► policy.py (cost, calibration,│
 │  applicant.py (score one case)                    gap, thresholds)          │
-│                                 storage.py (save / load runs)               │
+│  workflow.py ──► scoring.py     storage.py (save / load runs, model roles)  │
+│  (pipeline + human review)      business.py (dashboard numbers)             │
 └───────────────┬──────────────────────────────────────────┬─────────────────┘
                 │ reads                                     │ reads / writes
    data/synth_home_credit/                      backend/artifacts/
@@ -80,6 +82,8 @@ Every model gets the second-look policy, and every one raises profit and closes 
                                                      val/test_predictions.parquet,
                                                      history.parquet, policy.json,
                                                      calibrator.joblib
+                                                  model_roles.json, workflow_settings.json
+                                                  workflow.db (cases + audit trail)
 ```
 
 ### Backend modules (`backend/app/`)
@@ -96,8 +100,12 @@ Every model gets the second-look policy, and every one raises profit and closes 
 | `analysis.py` | Compares the 4 policies on validation and test for one run |
 | `insights.py` | Numbers for the Insights page (raw-table stats, example applicants, model walkthrough) |
 | `feature_info.py` | Plain-English descriptions of tables, raw columns and features (shared with the data dictionary) |
+| `business.py` | Business dashboard: primary model only vs with Second Look on the recent weeks, weekly trends |
 | `applicant.py` | Scores one applicant (with what-if changes) and explains the score |
-| `storage.py` | Saves / lists / loads runs in `artifacts/runs/` |
+| `applications.py` | Online applications: saves the form and turns it into one feature row for the models |
+| `storage.py` | Saves / lists / loads runs in `artifacts/runs/`; which run is the primary / second-look model |
+| `scoring.py` | Pipeline settings, and primary / Second Look scores for every test application |
+| `workflow.py` | The decision pipeline: process a week, send to Second Look, human review, audit trail (SQLite) |
 | `main.py` | The REST API |
 | `cli.py` | Train from the terminal |
 
@@ -105,12 +113,18 @@ Every model gets the second-look policy, and every one raises profit and closes 
 
 | Page | What you can do |
 |---|---|
+| **Home** (`/`) and **Help** (`/help`) | Pick a workspace; project overview, how-to per role, glossary, FAQ |
+| **Apply** (`/apply`) | Five-step online loan application; submitting it runs the pipeline and opens the decision |
+| **Application status** (`/apply/status`, `/apply/{id}`) | An applicant's decision in plain language (including "with our review team"), reasons, loan-amount what-if, next steps |
+| **Business: Dashboard** (`/business`) | Profit, approval rate, default rate and inclusion gap, primary model only vs with Second Look; weekly trends; rescued applicants |
+| **Business: Statistics** (`/business/statistics`) | Pipeline counts and charts: approved / declined by the primary model, through Second Look, waiting for a person, repaid share per route |
+| **Business: Work queue** (`/business/pipeline`) | Process a week, send declines to Second Look (automatic or manual), list borderline cases |
+| **Business: Review case** (`/business/review/{id}`) | Change terms, re-score, approve or decline (override needs a reason), audit trail |
+| **Business: Policy lab** (`/business/policy`) | Preview policy changes safely, then publish them to live decisions |
 | **Insights: data & model** | *Raw data* tab: table map, column types and stats, sample rows, one established and one thin-file applicant followed from raw rows to the final feature row. *Model* tab: features, time split, how the model works, hyperparameters in plain English, learning curve, what it learned, PD spread per segment, decisions in dollars, glossary |
 | **Overview & EDA** | Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values |
 | **Train models** | Pick a model and edit its settings — every hyperparameter and data setting is explained (what it does, typical range, effect). A live panel shows each training step, the time split, Optuna trials as they finish and the learning curve tree by tree |
-| **Compare models** | AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, delete runs |
-| **Policy lab** | Choose calibration, drift, penalty, ceiling, or set thresholds by hand; see before/after profit and gap, profit & gap curves, calibration plots |
-| **Score applicant** | Look up a case_id, see baseline vs second-look decisions, try what-if changes, see SHAP reasons |
+| **Compare models** | AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, set as primary / second look, delete runs |
 
 ---
 
@@ -211,6 +225,34 @@ cut-off then denies many thin-file applicants who would repay.
 
 The test set is never used for tuning; `solution.csv` is only used to score the final results.
 
+### 3.4 Decision pipeline (`workflow.py`, `scoring.py`)
+
+```
+New application ──► Primary model: raw PD < 20%? ──yes──► Approved
+                          │ no
+                          ▼   (automatic, or sent by a business user)
+                    Second Look: adjusted PD < segment cut-off? ──yes──► Approved
+                          │ no
+            ┌─────────────┴──────────────┐
+   within review band (2 pts)       clearly risky
+            ▼                            ▼
+   Human review: change terms,      Declined
+   re-score, approve / decline
+   (override needs a reason; every step goes to the audit trail)
+```
+
+- The **primary** and **second-look** runs are chosen on Compare models (`artifacts/model_roles.json`). Until then both
+  default to the run with the best validation AUC.
+- Settings (`mode` auto / manual, `primary_cutoff`, `review_band`) are in `artifacts/workflow_settings.json`.
+- Cases and events are stored in `artifacts/workflow.db` (SQLite tables `cases`, `events`, and `applications` for online forms).
+- **Online applications:** the Applicant workspace has a five-step application form (loan, about you, income & work,
+  credit history, review & submit). On submit, `applications.py` builds one feature row: a typical recent applicant
+  from the same credit-history group, with the applicant's answers on top (loan, income, job, tax income, credit score
+  band, late payments, credit checks, earlier loans with us). The case goes through the same pipeline straight away.
+  Name and email are kept only in the local `workflow.db` (git-ignored) and never reach the models.
+- Using Second Look only on primary declines gives $154.0M profit and a −2.5 pt gap on test (vs $147.7M and 36.9 pts
+  for the primary model alone).
+
 ---
 
 ## 4. REST API
@@ -227,11 +269,21 @@ The test set is never used for tuning; `solution.csv` is only used to score the 
 | GET | `/api/jobs`, `/api/jobs/{id}` | Job status, progress, logs |
 | GET | `/api/runs`, `/api/runs/{id}` | Trained runs and their metrics |
 | DELETE | `/api/runs/{id}` | Delete a run |
-| GET / POST | `/api/runs/{id}/policy` | Get or re-run the policy analysis. Body: `calibration`, `per_segment`, `drift`, `penalty`, `ceiling`, `thresholds` |
+| GET / POST | `/api/runs/{id}/policy` | Get the published policy, or run it. Body: `calibration`, `per_segment`, `drift`, `penalty`, `ceiling`, `thresholds`, `save` (false = preview, true = publish) |
 | GET | `/api/insights/raw` | Raw-data walkthrough: tables, columns, samples, example applicants |
 | GET | `/api/runs/{id}/insights` | Model walkthrough for one run (validation weeks only) |
-| GET | `/api/applicants/random` | 10 random test applicants |
-| POST | `/api/runs/{id}/score` | Score one applicant. Body: `case_id`, `changes` |
+| GET / PUT | `/api/model-roles` | Which runs are the primary and second-look models; set one. Body: `role`, `run_id` |
+| GET / PUT | `/api/workflow/settings` | Pipeline settings: `mode` (auto / manual), `primary_cutoff`, `review_band` |
+| GET | `/api/workflow/summary` | Counts per status and week, review progress, repaid share per route |
+| POST | `/api/workflow/process` | Run the primary model on one week. Body: `week` (92–107) |
+| POST | `/api/workflow/second-look` | Send primary declines to Second Look. Body: `case_ids` (empty = all waiting) |
+| GET | `/api/workflow/cases`, `/api/workflow/cases/{id}` | Cases by status; one case with scores, reasons and audit trail |
+| POST | `/api/workflow/cases/{id}/rescore` | Re-score with changed terms. Body: `changes` |
+| POST | `/api/workflow/cases/{id}/decide` | Approve or decline. Body: `decision`, `reason` (required for an override), `changes`, `reviewer` |
+| POST | `/api/workflow/reset` | Clear all cases |
+| GET | `/api/business/dashboard` | Business dashboard: primary model only vs with Second Look |
+| POST | `/api/portal/apply` | Submit an online application (validated form); runs the pipeline and returns the case |
+| GET / POST | `/api/portal/showcase`, `/api/portal/score` | Applicant portal: example applications; one decision with what-if and pipeline status |
 
 Interactive API docs: <http://localhost:8000/docs>
 

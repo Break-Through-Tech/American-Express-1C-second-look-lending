@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import { api } from '../api.js'
-import { ChartTooltip, ErrorBox, Legend, Stat } from '../components/ui.jsx'
-import { count, percent } from '../format.js'
+import { api } from '../../api.js'
+import { ChartTooltip, ErrorBox, Legend, Stat } from '../../components/ui.jsx'
+import { count, percent } from '../../format.js'
 
 const SEGMENT_LEGEND = [
   { label: 'Established', color: 'var(--series-established)' },
@@ -20,7 +21,7 @@ export default function Overview() {
   return (
     <>
       <div className="page-head">
-        <h1>Overview & EDA</h1>
+        <h1>Data overview</h1>
         <p>
           ~1M synthetic loans (train) and 200k later loans (test). Thin-file applicants have no credit-bureau history,
           so the model is least sure about them — that is where the inclusion gap comes from.
@@ -60,10 +61,8 @@ function OverviewContent({ data }) {
       <WeeklyChart rows={data.weekly_default_rate} />
       <FeatureExplorer />
 
-      <div className="grid grid-2">
-        <TablesCard tables={data.tables} />
-        <MissingCard rows={data.missing} />
-      </div>
+      <MissingCard rows={data.missing} />
+      <p className="small muted">How the 8 tables fit together, their columns and sample rows: <Link to="/tech/insights">Insights → Raw data</Link>.</p>
     </>
   )
 }
@@ -154,32 +153,6 @@ function FeatureExplorer() {
         )}
       </div>
       <p className="card-note">Bureau features have no thin-file bar — thin-file applicants have no bureau data at all.</p>
-    </div>
-  )
-}
-
-function TablesCard({ tables }) {
-  return (
-    <div className="card">
-      <h2>Tables and depths</h2>
-      <div className="table-wrap">
-        <table>
-          <thead>
-            <tr><th>Table</th><th className="num">Depth</th><th>Rows / loan</th><th className="num">Train rows</th></tr>
-          </thead>
-          <tbody>
-            {tables.map((t) => (
-              <tr key={t.table} title={t.description}>
-                <td className="mono">{t.table}</td>
-                <td className="num">{t.depth}</td>
-                <td>{t.grain_rows_per_case}</td>
-                <td className="num">{count(t.n_rows_train)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="card-note">Depth 0 joins directly on case_id. Depth 1–2 is aggregated to one row per loan first.</p>
     </div>
   )
 }
