@@ -145,6 +145,7 @@ def public_details(case_id):
     return {
         "first_name": form["first_name"],
         "last_name": form["last_name"],
+        "loan_amount": form["loan_amount"],
         "purpose": form["purpose"],
         "term_months": form["term_months"],
         "employment": form["employment"],

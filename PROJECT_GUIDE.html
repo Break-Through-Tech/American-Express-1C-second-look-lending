@@ -367,6 +367,13 @@ flowchart LR
     <h2 id="setup">7. Setup guide</h2>
     <p><strong>You need:</strong> Python 3.9+, Node.js 18+, git, and the dataset folder <code>synth_home_credit</code>
       (containing <code>csv_files/</code> and <code>solution.csv</code>). No GPU, no accounts.</p>
+    <div class="tip"><strong>Quick start.</strong> After steps 1 and 2 below, one script does the rest.
+      <strong>macOS / Linux:</strong> <code>./setup.sh</code> once, then <code>./start.sh</code>.
+      <strong>Windows:</strong> <code>setup.bat</code> once, then <code>start.bat</code> (double-click or Command Prompt).
+      Open <a href="http://localhost:8000">http://localhost:8000</a>. Add <code>--dev</code> to the start script for a
+      live-reloading UI on port 5173. The scripts check Python and Node, install everything, build the UI, check the
+      dataset and are safe to re-run. Windows needs the Microsoft Visual C++ Redistributable (x64) for LightGBM.</div>
+    <p>Prefer to do it by hand? The manual steps:</p>
     <ol class="steps">
       <li><strong>Get the code</strong>
         <pre><code>git clone https://github.com/Break-Through-Tech/American-Express-1C-second-look-lending.git
@@ -413,17 +420,20 @@ npm run dev                          # open http://localhost:5173</code></pre>
       </div>
       <div class="card page-card">
         <h3>Business</h3>
-        <div class="path">/business · /business/statistics · /business/pipeline · /business/policy</div>
-        <p><strong>Dashboard</strong>: profit, approval rate, default rate and inclusion gap, primary model only vs with
+        <div class="path">/business/pipeline · /business · /business/statistics · /business/policy</div>
+        <p><strong>Work queue</strong> (opens first): process a week, send declines to Second Look (automatic or manual),
+          open a borderline case, change terms, re-score and decide; the <em>Online applications</em> tab lists every
+          application submitted on Apply with its decision. <strong>Dashboard</strong>: profit, approval rate, default rate and inclusion gap, primary model only vs with
           Second Look. <strong>Statistics</strong>: how many the primary model approved or declined, how many went through
-          Second Look and how many wait for a person, with charts. <strong>Work queue</strong>: process a week, send declines
-          to Second Look (automatic or manual), open a borderline case, change terms, re-score and decide.
+          Second Look and how many wait for a person, with charts.
           <strong>Policy lab</strong>: <em>Preview</em> a policy change safely; <em>Publish</em> makes it live.</p>
       </div>
       <div class="card page-card">
         <h3>Tech team</h3>
         <div class="path">/tech · /tech/insights · /tech/train · /tech/models</div>
-        <p><strong>Data overview</strong> and <strong>Insights</strong>: the data and how models work. <strong>Train
+        <p><strong>Data overview</strong>: the data flow (8 raw tables → feature table → split by week) and the training
+          data itself — browse every raw table and the feature table, filter, and follow one loan across tables.
+          <strong>Insights</strong>: how features are built and how models work. <strong>Train
           models</strong>: settings with ⓘ tooltips and a live training view. <strong>Compare models</strong>: compare on
           validation, then <em>Set as primary</em> or <em>Set as second look</em>.</p>
       </div>
@@ -504,7 +514,8 @@ npm run dev                          # open http://localhost:5173</code></pre>
         <tbody>
           <tr><td>GET</td><td><code>/api/health</code></td><td>Is the dataset found, are features built</td></tr>
           <tr><td>POST</td><td><code>/api/features/build</code></td><td>Rebuild the feature tables (background job)</td></tr>
-          <tr><td>GET</td><td><code>/api/eda/overview</code>, <code>/api/eda/feature/{name}</code></td><td>Overview numbers, default rate by bin</td></tr>
+          <tr><td>GET</td><td><code>/api/eda/overview</code>, <code>/api/eda/feature/{name}</code></td><td>Overview numbers (including the week windows), default rate by bin</td></tr>
+          <tr><td>GET</td><td><code>/api/eda/training-sample</code>, <code>/api/eda/raw-table/{name}</code></td><td>Pages of the training feature table (filter by window, segment, outcome) and of each raw table (optionally one loan)</td></tr>
           <tr><td>GET</td><td><code>/api/models</code></td><td>Model types, defaults, parameter help</td></tr>
           <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>tune_trials</code>, weeks</td></tr>
           <tr><td>GET</td><td><code>/api/jobs</code>, <code>/api/jobs/{id}</code></td><td>Job list, or one job with logs and live progress</td></tr>

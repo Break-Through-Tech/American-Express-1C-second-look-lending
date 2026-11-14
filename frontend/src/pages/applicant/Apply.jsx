@@ -28,6 +28,45 @@ const EMPTY = {
   previous_loans: 0, consent: false,
 }
 
+// Made-up people for the "simulated customer" option (not real customers)
+const FIRST_NAMES = ['Alex', 'Jordan', 'Sam', 'Taylor', 'Morgan', 'Casey', 'Riley', 'Jamie', 'Avery', 'Quinn', 'Drew', 'Robin']
+const LAST_NAMES = ['Sample', 'Example', 'Tester', 'Demo', 'Placeholder', 'Mock']
+
+const pick = (list) => list[Math.floor(Math.random() * list.length)]
+const between = (low, high, step = 1) => low + step * Math.floor(Math.random() * ((high - low) / step + 1))
+
+// A random, realistic applicant so nobody has to type every field
+function simulatedCustomer() {
+  const first = pick(FIRST_NAMES)
+  const last = pick(LAST_NAMES)
+  const employment = pick(['employed', 'employed', 'employed', 'employed', 'self-employed', 'self-employed', 'retired', 'student', 'not working'])
+  const working = employment === 'employed' || employment === 'self-employed'
+  const income = working ? between(14000, 80000, 500) : between(6000, 24000, 500)
+  const hasHistory = Math.random() < 0.7
+  const born = new Date()
+  born.setFullYear(born.getFullYear() - between(21, 66), between(0, 11), between(1, 28))
+  return {
+    loan_amount: between(3000, 40000, 500),
+    term_months: pick(TERMS),
+    purpose: pick(PURPOSES),
+    first_name: first,
+    last_name: last,
+    email: `${first}.${last}@example.com`.toLowerCase(),
+    date_of_birth: born.toISOString().slice(0, 10),
+    employment,
+    years_employed: working ? between(1, 30) / 2 : 0,
+    annual_income: income,
+    tax_declared_income: Math.random() < 0.7 ? Math.round((income * between(85, 100)) / 100 / 100) * 100 : '',
+    has_credit_history: hasHistory,
+    credit_rating: hasHistory ? pick(['excellent', 'very good', 'good', 'good', 'fair', 'fair', 'poor']) : '',
+    credit_accounts: hasHistory ? between(1, 6) : 2,
+    worst_days_late: hasHistory ? pick([0, 0, 0, 15, 15, 45, 75]) : 0,
+    credit_checks_last_year: hasHistory ? between(0, 5) : 1,
+    previous_loans: between(0, 3),
+    consent: true,
+  }
+}
+
 const usd = (v) => `$${Math.round(v).toLocaleString()}`
 
 function monthlyPayment(amount, months) {
@@ -84,6 +123,7 @@ export default function Apply() {
   const [problem, setProblem] = useState(null)
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
+  const [simulated, setSimulated] = useState(false)
   const navigate = useNavigate()
 
   const set = (field) => (event) => {
@@ -91,6 +131,13 @@ export default function Apply() {
     setForm({ ...form, [field]: type === 'checkbox' ? checked : value })
   }
   const choose = (field, value) => setForm({ ...form, [field]: value })
+
+  // Ticking the box fills every step; unticking clears the form again
+  const toggleSimulated = (on) => {
+    setSimulated(on)
+    setForm(on ? simulatedCustomer() : EMPTY)
+    setProblem(null)
+  }
 
   const next = () => {
     const issue = checkStep(step, form)
@@ -141,6 +188,18 @@ export default function Apply() {
 
       <div className="apply-layout">
         <div className="card apply-form">
+          {(step === 0 || simulated) && <div className={`simulate-bar ${simulated ? 'on' : ''}`}>
+            {step === 0 ? (
+              <label className="check">
+                <input type="checkbox" checked={simulated} onChange={(e) => toggleSimulated(e.target.checked)} />
+                <span><strong>Use a simulated customer</strong>
+                  <span className="small muted"> · fills every step with made-up details, so you don't have to type</span></span>
+              </label>
+            ) : (
+              <span className="small"><strong>Simulated customer</strong> · all details are made up; change anything you like</span>
+            )}
+            {simulated && <button type="button" className="chip" onClick={() => toggleSimulated(true)}>New customer</button>}
+          </div>}
           {step === 0 && (
             <>
               <h2>How much would you like to borrow?</h2>

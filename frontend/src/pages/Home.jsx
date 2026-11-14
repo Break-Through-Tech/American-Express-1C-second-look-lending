@@ -12,12 +12,12 @@ const ROLES = [
     color: 'var(--series-thin)',
   },
   {
-    to: '/business',
+    to: '/business/pipeline',
     icon: 'briefcase',
     tag: 'For the business',
     title: 'Run the lending policy',
-    text: 'Track profit and fairness, run the decision pipeline, review borderline cases yourself, and publish policy changes.',
-    cta: 'Open the business dashboard',
+    text: 'Work through the queue of applications and borderline cases, track profit and fairness, and publish policy changes.',
+    cta: 'Open the work queue',
     color: 'var(--series-established)',
   },
   {

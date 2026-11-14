@@ -114,15 +114,15 @@ Every model gets the second-look policy, and every one raises profit and closes 
 | Page | What you can do |
 |---|---|
 | **Home** (`/`) and **Help** (`/help`) | Pick a workspace; project overview, how-to per role, glossary, FAQ |
-| **Apply** (`/apply`) | Five-step online loan application; submitting it runs the pipeline and opens the decision |
+| **Apply** (`/apply`) | Five-step online loan application (optionally pre-filled with a simulated customer); submitting it runs the pipeline and opens the decision |
 | **Application status** (`/apply/status`, `/apply/{id}`) | An applicant's decision in plain language (including "with our review team"), reasons, loan-amount what-if, next steps |
 | **Business: Dashboard** (`/business`) | Profit, approval rate, default rate and inclusion gap, primary model only vs with Second Look; weekly trends; rescued applicants |
 | **Business: Statistics** (`/business/statistics`) | Pipeline counts and charts: approved / declined by the primary model, through Second Look, waiting for a person, repaid share per route |
-| **Business: Work queue** (`/business/pipeline`) | Process a week, send declines to Second Look (automatic or manual), list borderline cases |
+| **Business: Work queue** (`/business/pipeline`, the Business landing page) | Process a week, send declines to Second Look (automatic or manual), list borderline cases; *Online applications* tab with every submitted application and its decision |
 | **Business: Review case** (`/business/review/{id}`) | Change terms, re-score, approve or decline (override needs a reason), audit trail |
 | **Business: Policy lab** (`/business/policy`) | Preview policy changes safely, then publish them to live decisions |
 | **Insights: data & model** | *Raw data* tab: table map, column types and stats, sample rows, one established and one thin-file applicant followed from raw rows to the final feature row. *Model* tab: features, time split, how the model works, hyperparameters in plain English, learning curve, what it learned, PD spread per segment, decisions in dollars, glossary |
-| **Overview & EDA** | Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values |
+| **Data overview** (`/tech`) | Data flow (8 raw tables → feature table → week windows with row counts), training-data browser for every raw table and the feature table (filters, follow one loan), dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values |
 | **Train models** | Pick a model and edit its settings — every hyperparameter and data setting is explained (what it does, typical range, effect). A live panel shows each training step, the time split, Optuna trials as they finish and the learning curve tree by tree |
 | **Compare models** | AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, set as primary / second look, delete runs |
 
@@ -264,6 +264,8 @@ New application ──► Primary model: raw PD < 20%? ──yes──► Approv
 | GET | `/api/eda/overview` | Dataset summary for the Overview page |
 | GET | `/api/eda/features` | Feature names |
 | GET | `/api/eda/feature/{name}` | Default rate by bin, per segment |
+| GET | `/api/eda/training-sample` | A page of the training feature table: `window`, `segment`, `outcome`, `all_columns`, `offset` |
+| GET | `/api/eda/raw-table/{name}` | A page of one raw training table, optionally one loan (`case_id`) |
 | GET | `/api/models` | Model types, default hyperparameters |
 | POST | `/api/train` | Start a training job. Body: `model_type`, `params`, `sample_fraction`, `val_start_week`, `tune_trials`, `name` |
 | GET | `/api/jobs`, `/api/jobs/{id}` | Job status, progress, logs |
@@ -277,7 +279,7 @@ New application ──► Primary model: raw PD < 20%? ──yes──► Approv
 | GET | `/api/workflow/summary` | Counts per status and week, review progress, repaid share per route |
 | POST | `/api/workflow/process` | Run the primary model on one week. Body: `week` (92–107) |
 | POST | `/api/workflow/second-look` | Send primary declines to Second Look. Body: `case_ids` (empty = all waiting) |
-| GET | `/api/workflow/cases`, `/api/workflow/cases/{id}` | Cases by status; one case with scores, reasons and audit trail |
+| GET | `/api/workflow/cases`, `/api/workflow/cases/{id}` | Cases by status (`online=true` lists online applications, newest first); one case with scores, reasons and audit trail |
 | POST | `/api/workflow/cases/{id}/rescore` | Re-score with changed terms. Body: `changes` |
 | POST | `/api/workflow/cases/{id}/decide` | Approve or decline. Body: `decision`, `reason` (required for an override), `changes`, `reviewer` |
 | POST | `/api/workflow/reset` | Clear all cases |

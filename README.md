@@ -45,6 +45,25 @@ Break Through Tech AI · AI Studio Challenge 2026 (Aug – Dec 2026).
 **You need:** Python 3.9+, Node.js 18+, and the synthetic dataset folder (`synth_home_credit`, with `csv_files/` and
 `solution.csv` inside). No GPU and no accounts are needed.
 
+### Quick start (recommended)
+
+Clone the repo, put the dataset in `data/synth_home_credit`, then run the script for your system from the project folder.
+Each script checks Python and Node, installs the backend in `backend/.venv`, builds the frontend and checks the dataset.
+They are safe to run again.
+
+| | macOS / Linux (Terminal) | Windows (Command Prompt, or double-click) |
+|---|---|---|
+| Install once | `./setup.sh` | `setup.bat` |
+| Start the app | `./start.sh` | `start.bat` |
+| Start with live UI reload | `./start.sh --dev` (UI on :5173) | `start.bat --dev` (UI on :5173) |
+
+Then open **http://localhost:8000**. On macOS, `setup.sh` also runs `backend/scripts/fix_lightgbm_macos.sh` when
+Homebrew's `libomp` is missing. On Windows, LightGBM needs the *Microsoft Visual C++ Redistributable (x64)*;
+`setup.bat` tells you if it is missing. To keep the dataset elsewhere, set `SLL_DATA_DIR` before starting
+(`export SLL_DATA_DIR=/path/...` on macOS / Linux, `set SLL_DATA_DIR=C:\path\...` on Windows).
+
+### Manual setup
+
 ```bash
 # 1. Clone the repository
 git clone https://github.com/Break-Through-Tech/American-Express-1C-second-look-lending.git
@@ -109,9 +128,9 @@ flowchart LR
 
 | Workspace | Who | Pages |
 |---|---|---|
-| **Applicant** `/apply` | People applying for a loan | Five-step application form → instant decision, plain-language reasons, loan-amount what-if, next steps. `/apply/status` checks an application by number |
-| **Business** `/business` | Credit / risk managers | Dashboard (profit, approval, default rate, inclusion gap: primary model only vs with Second Look) · Statistics (pipeline counts and charts) · Work queue (process weeks, send declines to Second Look, review borderline cases) · Policy lab (**Preview**, then **Publish**) |
-| **Tech team** `/tech` | Data scientists | Data overview · Insights (data & model) · Train models (live) · Compare models (**Set as primary** / **Set as second look**) |
+| **Applicant** `/apply` | People applying for a loan | Five-step application form (or tick **Use a simulated customer** to pre-fill it) → instant decision, plain-language reasons, loan-amount what-if, next steps. `/apply/status` checks an application by number |
+| **Business** `/business/pipeline` | Credit / risk managers | Work queue, the first page (process weeks, send declines to Second Look, review borderline cases, and an **Online applications** tab with every submitted application and its decision) · Dashboard (profit, approval, default rate, inclusion gap: primary model only vs with Second Look) · Statistics (pipeline counts and charts) · Policy lab (**Preview**, then **Publish**) |
+| **Tech team** `/tech` | Data scientists | Data overview (data flow from 8 raw tables to the feature table and the week split; browse the training data in every table) · Insights (data & model) · Train models (live) · Compare models (**Set as primary** / **Set as second look**) |
 | **Help** `/help` | Everyone | Project overview, how-to per role, glossary, FAQ, links to the full guide (`/guide`) and API docs (`/docs`) |
 
 ```mermaid
@@ -247,6 +266,7 @@ Thanks to our Challenge Advisor, AI Studio coach and the Break Through Tech AI t
 
 | Path | What it is |
 |---|---|
+| `setup.sh`, `start.sh` / `setup.bat`, `start.bat` | One-command install and start for macOS / Linux and Windows |
 | `backend/app/` | FastAPI app and all ML code (features, models, training, policy, insights) |
 | `frontend/src/` | React UI: `pages/applicant/`, `pages/business/`, `pages/tech/`, plus Home and Help |
 | `notebooks/second_look_lending.ipynb` | Reproducible EDA + models + policy notebook (built from `build_notebook.py`) |

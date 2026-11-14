@@ -203,8 +203,11 @@ def get_case(case_id):
             "events": [dict(e) for e in events]}
 
 
-def list_cases(status=None, week=None, thin_file=None, limit=50, offset=0):
+def list_cases(status=None, week=None, thin_file=None, limit=50, offset=0, online=False):
     where, args = [], []
+    if online:
+        where.append("case_id >= ?")
+        args.append(applications.FIRST_ID)
     if status:
         where.append("status = ?")
         args.append(status)
@@ -217,12 +220,16 @@ def list_cases(status=None, week=None, thin_file=None, limit=50, offset=0):
     clause = f"WHERE {' AND '.join(where)}" if where else ""
     with connect() as conn:
         total = conn.execute(f"SELECT COUNT(*) FROM cases {clause}", args).fetchone()[0]
-        # Borderline cases first: the smallest distance to the cut-off
-        rows = conn.execute(
-            f"SELECT * FROM cases {clause} ORDER BY (second_look_pd - second_look_cutoff) IS NULL, "
-            f"(second_look_pd - second_look_cutoff), case_id LIMIT ? OFFSET ?", args + [limit, offset]).fetchall()
-    return {"total": total, "cases": [{**dict(r), "status_label": STATUSES[r["status"]],
-                                       "online": applications.is_online(r["case_id"])} for r in rows]}
+        # Online applications: newest first. Otherwise borderline cases first (smallest distance to the cut-off)
+        order = "case_id DESC" if online else (
+            "(second_look_pd - second_look_cutoff) IS NULL, (second_look_pd - second_look_cutoff), case_id")
+        rows = conn.execute(f"SELECT * FROM cases {clause} ORDER BY {order} LIMIT ? OFFSET ?", args + [limit, offset]).fetchall()
+    cases = []
+    for r in rows:
+        is_online = applications.is_online(r["case_id"])
+        cases.append({**dict(r), "status_label": STATUSES[r["status"]], "online": is_online,
+                      "application": applications.public_details(r["case_id"]) if is_online else None})
+    return {"total": total, "cases": cases}
 
 
 def summary():
@@ -259,6 +266,7 @@ def summary():
         "statuses": STATUSES,
         "roles": storage.get_model_roles(),
         "online_week": applications.online_week(),
+        "online_total": int((df["case_id"] >= applications.FIRST_ID).sum()),
     }
 
 

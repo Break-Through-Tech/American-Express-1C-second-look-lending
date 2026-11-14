@@ -100,6 +100,22 @@ def eda_overview():
     return eda.dataset_overview()
 
 
+@app.get("/api/eda/training-sample")
+def eda_training_sample(window: Optional[Literal["fit", "model_validation", "policy_validation"]] = None,
+                        segment: Optional[Literal["established", "thin_file"]] = None,
+                        outcome: Optional[Literal["repaid", "defaulted"]] = None,
+                        all_columns: bool = False, offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=50)):
+    return eda.training_sample(window, segment, outcome, all_columns, offset, limit)
+
+
+@app.get("/api/eda/raw-table/{name}")
+def eda_raw_table(name: str, case_id: Optional[int] = None, offset: int = Query(0, ge=0), limit: int = Query(10, ge=1, le=50)):
+    try:
+        return eda.raw_table_page(name, case_id, offset, limit)
+    except KeyError as error:
+        not_found(error)
+
+
 @app.get("/api/eda/features")
 def eda_features():
     return eda.feature_list()
@@ -276,8 +292,8 @@ def workflow_send(request: SendRequest):
 
 @app.get("/api/workflow/cases")
 def workflow_cases(status: Optional[str] = None, week: Optional[int] = None, thin_file: Optional[bool] = None,
-                   limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0)):
-    return workflow.list_cases(status, week, thin_file, limit, offset)
+                   limit: int = Query(50, ge=1, le=500), offset: int = Query(0, ge=0), online: bool = False):
+    return workflow.list_cases(status, week, thin_file, limit, offset, online)
 
 
 @app.get("/api/workflow/cases/{case_id}")

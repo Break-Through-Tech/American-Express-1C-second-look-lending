@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { api } from '../../api.js'
 import { ErrorBox, InfoTip } from '../../components/ui.jsx'
 import { useModelRoles } from '../../components/useRuns.js'
-import { count, percent } from '../../format.js'
+import { count, money, percent } from '../../format.js'
 
 const PAGE = 50
 
@@ -87,6 +87,9 @@ export default function WorkQueue() {
             <button className={tab === 'decided' ? 'active' : ''} onClick={() => setTab('decided')}>
               Decided by reviewers ({count((counts.approved_review || 0) + (counts.declined_review || 0))})
             </button>
+            <button className={tab === 'online' ? 'active' : ''} onClick={() => setTab('online')}>
+              Online applications ({count(summary.online_total || 0)})
+            </button>
           </div>
           <div className="spacer" />
           <OpenCase />
@@ -97,6 +100,7 @@ export default function WorkQueue() {
         )}
         {tab === 'in_review' && <ReviewQueue key={`r${summary.total}`} status="in_review" />}
         {tab === 'decided' && <ReviewQueue key={`d${summary.total}`} status="decided" />}
+        {tab === 'online' && <OnlineApplications key={`o${summary.total}`} />}
       </div>
     </>
   )
@@ -290,6 +294,50 @@ function ReviewQueue({ status }) {
                 <td className="num">{((c.second_look_pd - c.second_look_cutoff) * 100).toFixed(1)} pts</td>
                 <td><StatusBadge status={c.status} label={c.status_label} /></td>
                 <td><Link to={`/business/review/${c.case_id}`}>{status === 'in_review' ? 'Review →' : 'Open →'}</Link></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Pager offset={offset} total={data.total} onChange={setOffset} />
+    </>
+  )
+}
+
+// Everything submitted through the applicant form, newest first, with where each one ended up
+function OnlineApplications() {
+  const [offset, setOffset] = useState(0)
+  const [data, setData] = useState(null)
+  useEffect(() => {
+    api.workflowCases({ online: true, limit: PAGE, offset }).then(setData)
+  }, [offset])
+  if (!data) return <p className="muted">Loading…</p>
+  if (data.total === 0) {
+    return <p className="muted">No online applications yet. They appear here as soon as someone submits the form on <Link to="/apply">Apply</Link>.</p>
+  }
+  return (
+    <>
+      <p className="small muted">Applications submitted on the Apply page. Each one goes through the pipeline the moment it is submitted.</p>
+      <div className="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Application</th><th>Applicant</th><th>Submitted</th><th className="num">Loan</th><th>Borrower</th>
+              <th className="num">Primary risk</th><th className="num">Second Look risk</th><th>Decision</th><th />
+            </tr>
+          </thead>
+          <tbody>
+            {data.cases.map((c) => (
+              <tr key={c.case_id}>
+                <td className="mono">#{c.case_id}</td>
+                <td>{c.application.first_name} {c.application.last_name}</td>
+                <td>{c.application.submitted_at.replace('T', ' ').slice(0, 16)}</td>
+                <td className="num">{money(c.application.loan_amount)}</td>
+                <td><SegmentBadge thin={c.thin_file} /></td>
+                <td className="num">{percent(c.primary_pd)}</td>
+                <td className="num">{c.second_look_pd == null ? '—' : percent(c.second_look_pd)}</td>
+                <td><StatusBadge status={c.status} label={c.status_label} /></td>
+                <td><Link to={`/business/review/${c.case_id}`}>{c.status === 'in_review' ? 'Review →' : 'Open →'}</Link></td>
               </tr>
             ))}
           </tbody>

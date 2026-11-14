@@ -42,6 +42,8 @@ const FAQ = [
   ['Why can the inclusion gap be negative?', 'It means first-time borrowers who repaid are approved slightly more often than established ones. The fairness penalty pushes the gap towards 0 from either side.'],
   ['Where are the epochs?', 'These models don\'t use epochs. LightGBM adds one tree per round (stopped early when validation stops improving), Random Forest builds each tree once, and logistic regression runs solver iterations.'],
   ['Why do we split data by week and not at random?', 'Lending predicts the future from the past. A time split copies that, and nothing is judged on data it was tuned on.'],
+  ['Why three training windows?', 'Each has one job. Weeks 0–79 teach the model, 80–85 decide when to stop and which settings are best, and 86–91 — never seen by the model — calibrate it and choose the cut-offs. Reusing 80–85 for the policy would make it look better than it is. Test weeks 92–107 are only scored at the end.'],
+  ['Setup fails — what now?', 'Run the setup script again after fixing what it reports (it is safe to re-run). Common causes: Python or Node.js not installed or too old, or on Windows the Microsoft Visual C++ Redistributable missing for LightGBM.'],
   ['Why does an applicant see no risk numbers?', 'Applicants get the decision, plain-language reasons and what they could change. Scores and cut-offs are internal; the business sees them when reviewing a case from the Work queue.'],
 ]
 
@@ -92,6 +94,7 @@ export default function Help() {
         <h2>Applicant how-to</h2>
         <ol className="help-steps">
           <li>Open <Link to="/apply">Applicant</Link> and fill in the five steps: your loan, about you, income & work, credit history, then review and submit.</li>
+          <li>In a hurry? Tick <strong>Use a simulated customer</strong> on the first step: every step is filled with made-up details (press <em>New customer</em> for another one). Change anything you like, then just press Continue.</li>
           <li>You get a decision and an application number straight away. "Approved through Second Look" means a second, closer look approved what the first check declined.</li>
           <li>Later, use <Link to="/apply/status">Check your status</Link> with that number, or open one of the example decisions from the dataset.</li>
           <li>Check <em>What helped</em> and <em>What held it back</em> for the main reasons, in plain words.</li>
@@ -102,7 +105,7 @@ export default function Help() {
       <section id="business" className="card">
         <h2>Business how-to</h2>
         <ol className="help-steps">
-          <li><Link to="/business/pipeline">Work queue</Link>: online applications go through the pipeline the moment they are submitted (week shows "Online"). You can also process a week of applications from the dataset. Choose <strong>Automatic</strong> (declines go straight to Second Look) or <strong>Manual</strong> (select them and press <em>Send to Second Look</em>).</li>
+          <li><Link to="/business/pipeline">Work queue</Link> (the Business tab opens here): online applications go through the pipeline the moment they are submitted. The <strong>Online applications</strong> tab lists every one, newest first, with the applicant, loan, both scores and the decision — approved, declined or waiting for a person. You can also process a week of applications from the dataset. Choose <strong>Automatic</strong> (declines go straight to Second Look) or <strong>Manual</strong> (select them and press <em>Send to Second Look</em>).</li>
           <li>Open a case from the <strong>Human review</strong> list. Change the terms (amount, payment, verified income), press <em>Re-score</em>, then approve or decline. Approving against the model needs a reason.</li>
           <li><Link to="/business/statistics">Statistics</Link>: how many the primary model approved or declined, how many went through Second Look, how many are waiting for a person, and how each route's approvals repaid.</li>
           <li><Link to="/business">Dashboard</Link>: expected profit and fairness across all recent weeks, primary model alone vs with Second Look.</li>
@@ -113,7 +116,8 @@ export default function Help() {
       <section id="tech" className="card">
         <h2>Tech team how-to</h2>
         <ol className="help-steps">
-          <li><Link to="/tech">Data overview</Link> and <Link to="/tech/insights">Insights</Link>: explore the 8 tables, follow one applicant from raw rows to features, and see how a model works inside.</li>
+          <li><Link to="/tech">Data overview</Link>: the data flow (8 raw tables → one feature row per loan → split by week into fit, model validation, policy validation and test) and the <strong>training data</strong> itself. Open any of the 8 raw tables or the feature table, filter by window, borrower type or outcome, and click a case_id to follow that loan through every raw table.</li>
+          <li><Link to="/tech/insights">Insights</Link>: how each table becomes features, and how a model works inside.</li>
           <li><Link to="/tech/train">Train models</Link>: pick a model, hover ⓘ on any setting, press Start and watch each step live.</li>
           <li><Link to="/tech/models">Compare models</Link>: compare runs on <strong>validation</strong> (the test tab is a final check only).</li>
           <li>Open a run and press <strong>Set as primary</strong> or <strong>Set as second look</strong>. Live decisions use them from then on.</li>
@@ -159,8 +163,20 @@ export default function Help() {
 
       <section id="setup" className="card">
         <h2>Setup & links</h2>
-        <pre className="logs">{`cd backend && .venv/bin/uvicorn app.main:app --port 8000
-cd frontend && npm run dev      # or: npm run build, then use port 8000`}</pre>
+        <p>You need Python 3.9+, Node.js 18+ and the dataset folder <code>synth_home_credit</code> in <code>data/</code>. Then, from the project folder:</p>
+        <div className="grid grid-2">
+          <div>
+            <h3>macOS / Linux (Terminal)</h3>
+            <pre className="logs">{`./setup.sh     # once: installs everything
+./start.sh     # then open http://localhost:8000`}</pre>
+          </div>
+          <div>
+            <h3>Windows (Command Prompt)</h3>
+            <pre className="logs">{`setup.bat      # once: installs everything
+start.bat      # then open http://localhost:8000`}</pre>
+          </div>
+        </div>
+        <p className="small muted">Developing the UI? <code>./start.sh --dev</code> or <code>start.bat --dev</code> also starts a live-reloading frontend on port 5173.</p>
         <ul className="takeaways" style={{ marginTop: 10 }}>
           <li><a href="/guide" target="_blank" rel="noreferrer">Full project guide</a> — architecture and flow diagrams, setup, code walkthrough.</li>
           <li><a href="/docs" target="_blank" rel="noreferrer">API documentation</a> — every endpoint, try them in the browser.</li>

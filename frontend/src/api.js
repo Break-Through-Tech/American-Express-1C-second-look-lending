@@ -19,6 +19,8 @@ export const api = {
 
   overview: () => request('GET', '/api/eda/overview'),
   featureList: () => request('GET', '/api/eda/features'),
+  rawTable: (name, params) => request('GET', `/api/eda/raw-table/${name}?${new URLSearchParams(params)}`),
+  trainingSample: (params) => request('GET', `/api/eda/training-sample?${new URLSearchParams(params)}`),
   featureSignal: (name) => request('GET', `/api/eda/feature/${name}`),
 
   modelOptions: () => request('GET', '/api/models'),

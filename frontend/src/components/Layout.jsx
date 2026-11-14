@@ -15,10 +15,11 @@ export const WORKSPACES = [
     label: 'Business',
     icon: 'briefcase',
     path: '/business',
+    home: '/business/pipeline',  // the Business tab opens on the Work queue
     pages: [
+      { path: '/business/pipeline', label: 'Work queue', icon: 'inbox' },
       { path: '/business', label: 'Dashboard', icon: 'dashboard' },
       { path: '/business/statistics', label: 'Statistics', icon: 'chart' },
-      { path: '/business/pipeline', label: 'Work queue', icon: 'inbox' },
       { path: '/business/policy', label: 'Policy lab', icon: 'sliders' },
     ],
   },
@@ -46,7 +47,7 @@ function Header() {
       </Link>
       <nav className="switcher" aria-label="Workspaces">
         {WORKSPACES.map((w) => (
-          <NavLink key={w.id} to={w.path} className={pathname.startsWith(w.path) ? 'active' : ''}>
+          <NavLink key={w.id} to={w.home || w.path} className={pathname.startsWith(w.path) ? 'active' : ''}>
             <Icon name={w.icon} size={16} />{w.label}
           </NavLink>
         ))}

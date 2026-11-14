@@ -321,12 +321,12 @@
       <tbody>
         <tr><td>Insights: data &amp; model</td><td><em>Raw data</em>: table map, column types and stats, sample rows, one established and one thin-file applicant followed from raw rows to the final feature row. <em>Model</em>: features, time split, how the model works, hyperparameters in plain English, learning curve, what it learned, PD spread per segment, decisions in dollars, glossary</td></tr>
         <tr><td>Home · Help</td><td>Pick a workspace (Applicant, Business, Tech team); project overview, how-to per role, glossary, FAQ</td></tr>
-        <tr><td>Apply</td><td>Five-step online loan application; submitting it runs the pipeline and opens the decision</td></tr>
+        <tr><td>Apply</td><td>Five-step online loan application (optionally pre-filled with a simulated customer); submitting it runs the pipeline and opens the decision</td></tr>
         <tr><td>Application status</td><td>An applicant's decision in plain language (including "with our review team"), reasons, loan-amount what-if and next steps</td></tr>
         <tr><td>Business: dashboard, statistics</td><td>Profit and fairness, primary model only vs with Second Look; pipeline counts and charts (approved / declined by the primary model, through Second Look, waiting for a person)</td></tr>
-        <tr><td>Business: work queue, review case</td><td>Process a week, send declines to Second Look (automatic or manual); change a borderline case's terms, re-score, approve or decline with an audit trail</td></tr>
+        <tr><td>Business: work queue, review case</td><td>The Business landing page. Process a week, send declines to Second Look (automatic or manual); Online applications tab with every submitted application and its decision; change a borderline case's terms, re-score, approve or decline with an audit trail</td></tr>
         <tr><td>Business: policy lab</td><td>Preview policy changes safely, then publish them to live decisions</td></tr>
-        <tr><td>Tech: Data overview</td><td>Dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values</td></tr>
+        <tr><td>Tech: Data overview</td><td>Data flow (8 raw tables → feature table → week windows), training-data browser for every raw table and the feature table, dataset size, default rates, thin-file share, weekly drift chart, feature-vs-default explorer, table depths, missing values</td></tr>
         <tr><td>Train models</td><td>Pick a model and edit its settings — every hyperparameter and data setting is explained (what it does, typical range, effect). A live panel shows each training step, the time split, Optuna trials as they finish and the learning curve tree by tree</td></tr>
         <tr><td>Compare models</td><td>AUC / LogLoss / Brier per segment on validation and test, uplift vs LR, feature importance, set as primary / second look, delete runs</td></tr>
       </tbody>
@@ -544,6 +544,7 @@
         <tr><td>POST</td><td><code>/api/features/build</code></td><td>Rebuild feature tables (background job)</td></tr>
         <tr><td>GET</td><td><code>/api/eda/overview</code></td><td>Dataset summary</td></tr>
         <tr><td>GET</td><td><code>/api/eda/features</code> · <code>/api/eda/feature/{name}</code></td><td>Feature list · default rate by bin per segment</td></tr>
+        <tr><td>GET</td><td><code>/api/eda/training-sample</code> · <code>/api/eda/raw-table/{name}</code></td><td>Pages of the training feature table and of each raw table (optionally one loan)</td></tr>
         <tr><td>GET</td><td><code>/api/models</code></td><td>Model types and default hyperparameters</td></tr>
         <tr><td>POST</td><td><code>/api/train</code></td><td>Start training: <code>model_type</code>, <code>params</code>, <code>sample_fraction</code>, <code>val_start_week</code>, <code>tune_trials</code>, <code>name</code></td></tr>
         <tr><td>GET</td><td><code>/api/jobs</code> · <code>/api/jobs/{id}</code></td><td>Job status, progress, logs</td></tr>
@@ -554,7 +555,7 @@
         <tr><td>GET</td><td><code>/api/workflow/summary</code></td><td>Counts per status and week, review progress, repaid share per route</td></tr>
         <tr><td>POST</td><td><code>/api/workflow/process</code></td><td>Run the primary model on one week: <code>week</code> (92–107)</td></tr>
         <tr><td>POST</td><td><code>/api/workflow/second-look</code></td><td>Send primary declines to Second Look: <code>case_ids</code> (empty = all waiting)</td></tr>
-        <tr><td>GET</td><td><code>/api/workflow/cases</code> · <code>/api/workflow/cases/{id}</code></td><td>Cases by status; one case with scores, reasons and audit trail</td></tr>
+        <tr><td>GET</td><td><code>/api/workflow/cases</code> · <code>/api/workflow/cases/{id}</code></td><td>Cases by status (<code>online=true</code>: online applications, newest first); one case with scores, reasons and audit trail</td></tr>
         <tr><td>POST</td><td><code>/api/workflow/cases/{id}/rescore</code> · <code>/decide</code></td><td>Re-score with changed terms; approve or decline (an override needs a <code>reason</code>)</td></tr>
         <tr><td>POST</td><td><code>/api/workflow/reset</code></td><td>Clear all cases</td></tr>
         <tr><td>GET</td><td><code>/api/business/dashboard</code></td><td>Business dashboard: primary model only vs with Second Look</td></tr>

@@ -674,3 +674,36 @@ button.option.rating span { font-size: 12px; color: var(--text-3); font-weight: 
   .rating-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
 @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } .apply-steps li { font-size: 0; padding: 4px; gap: 0; } .apply-steps li.current { font-size: 13px; padding-right: 12px; gap: 8px; } }
+.simulate-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+  padding: 10px 14px; border-radius: 10px; border: 1px dashed var(--border-strong); background: var(--surface-2); margin: -4px 0 0;
+}
+.simulate-bar.on { border-style: solid; border-color: var(--accent-ring); background: var(--accent-soft); }
+
+/* Data overview: data flow and training data */
+.data-flow { display: flex; align-items: stretch; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.data-flow-box {
+  flex: 1 1 200px; display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border); font-size: 12.5px; color: var(--text-2);
+}
+.data-flow-box strong { color: var(--text); font-size: 14px; }
+.timeline { display: flex; gap: 2px; height: 28px; border-radius: 8px; overflow: hidden; }
+.timeline > div { display: flex; align-items: center; justify-content: center; min-width: 0; }
+.timeline span { color: #fff; font-size: 11px; font-weight: 600; white-space: nowrap; overflow: hidden; padding: 0 4px; }
+.window-card {
+  display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+  border-top: 3px solid var(--window); background: var(--surface);
+}
+.window-card strong { font-size: 18px; letter-spacing: -0.01em; }
+.window-name { font-size: 12px; font-weight: 600; color: var(--text-2); }
+table.compact th.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; cursor: help; white-space: nowrap; }
+.table-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 14px; }
+.table-tabs button {
+  display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px;
+  font-weight: 500; background: var(--surface); color: var(--text-2); border-color: var(--border-strong); box-shadow: none;
+}
+.table-tabs button span { font-family: 'Inter', sans-serif; font-size: 11px; color: var(--text-3); }
+.table-tabs button:hover { background: var(--surface-2); color: var(--text); }
+.table-tabs button.active { background: var(--accent-soft); color: var(--text); border-color: var(--accent); font-weight: 600; }
+button.link-button { background: none; border: none; box-shadow: none; padding: 0; color: var(--accent); font-weight: 500; font-size: inherit; text-decoration: underline; text-underline-offset: 2px; }
+button.link-button:hover { background: none; color: var(--accent-hover); }
